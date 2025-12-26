@@ -1,0 +1,10 @@
+[package]
+name = "diary"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.53" , features = ["derive"]}
+directories = "6.0.0"
+rusqlite = "0.38.0"
+time = { version = "0.3.44", features = ["parsing", ] }
