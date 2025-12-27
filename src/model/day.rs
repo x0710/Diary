@@ -34,6 +34,14 @@ impl Day {
             mood,
         }
     }
+    pub fn from_event(date: &time::Date, event: &Event) -> Self {
+        Self::new(
+            date.clone(),
+            event.clone(),
+            None,
+            None,
+        )
+    }
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
