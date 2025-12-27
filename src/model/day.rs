@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::model::event::Event;
 
 #[derive(Debug)]
@@ -32,5 +33,15 @@ impl Day {
             weather,
             mood,
         }
+    }
+}
+impl Display for Day {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, r#"date: {}, weather: {}, mood: {}, Event: {}"#,
+            self.date,
+            self.weather.as_deref().map_or_else(|| "".to_string(), |w| format!(", weather: {}", w)),
+            self.mood.as_deref().map_or_else(|| "".to_string(), |w| format!(", mood: {}", w)),
+            self.event,
+        )
     }
 }
