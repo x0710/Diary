@@ -1,8 +1,8 @@
 use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::process::ExitStatus;
+use std::str::FromStr;
 use clap::Parser;
 use rustyline::error::ReadlineError;
 use tempfile::NamedTempFile;
@@ -68,37 +68,50 @@ impl CliHandler {
         loop {
             match rl.readline(">: ") {
                 Ok(line) => {
-                    if self.deal_command(line.as_str()).is_err() {
-                        break;
+                    match self.deal_command(line.as_str()) {
+                        Err(CliErr::Db(err)) => {
+                            eprintln!("Database error: {}", err);
+                        },
+                        Err(CliErr::Io(err)) => {
+                            eprintln!("IO Error: {}", err);
+                        },
+                        Err(CliErr::InvalidDate(err)) => {
+                            eprintln!("Invalid date: {}", err);
+                        },
+                        Err(CliErr::UnknownCommand(cmd)) => {
+                            eprintln!("Unknown command: {}", cmd);
+                        }
+                        Err(CliErr::Exit) | Ok(_) => (),
                     }
-                }
+                },
                 Err(ReadlineError::Eof) => {
                     println!("Have a nice day!");
                     break;
-                }
+                },
                 Err(ReadlineError::Interrupted) => {
                     println!("Have a nice day!");
                     break;
-                }
+                },
                 Err(err) => panic!("{}", err),
             }
         }
     }
-    fn deal_command(&self, command: &str) -> Result<(), Box<dyn Error>> {
+    fn deal_command(&self, command: &str) -> Result<(), CliErr> {
         let (ops, arg) = command.split_once(' ').unwrap_or((command, ""));
+        let ops = ops.parse::<SubCommand>()?;
         let mut tmpfile = NamedTempFile::new()?;
 
         let date = parse_to_date(&arg);
         match ops {
-            "ad" | "add" => {
+            SubCommand::Add => {
                 if let Some(date) = date {
-                    self.conn.read_day(&date).map(|day| {
-                        tmpfile.write_all(day.event().instruct.as_bytes()).unwrap();
-                        tmpfile.flush().unwrap();
-                        tmpfile.seek(SeekFrom::Start(0)).unwrap()
-                    });
-                    edit_file(tmpfile.path())
-                        .expect("Please Config your Default EDITOR!");
+                    if let Some(day) = self.conn.read_day(&date) {
+                        tmpfile.write_all(day.event().instruct.as_bytes())?;
+                        tmpfile.flush()?;
+                        tmpfile.seek(SeekFrom::Start(0))?;
+                    }
+                    edit_file(tmpfile.path())?;
+                        // .expect("Please Config your Default EDITOR!");
                     tmpfile.flush()?;
                     tmpfile.seek(SeekFrom::Start(0))?;
                     let mut data = String::new();
@@ -109,19 +122,19 @@ impl CliHandler {
                         None,
                         None,
                     );
-                    self.conn.add_day(&day).unwrap();
+                    self.conn.add_day(&day)?;
                 }else {
                     println!("Please input correct time");
                 }
             },
-            "rm" | "remove" => {
+            SubCommand::Remove => {
                 if let Some(date) = date {
                     self.conn.remove_day(&date)?;
                 }else {
                     println!("Please input correct date");
                 }
             },
-            "check" | "chk" => {
+            SubCommand::Check => {
                 if let Some(date) = date {
                     if let Some(date) = self.conn.read_day(&date) {
                         tmpfile.write_all(date.event().instruct.as_bytes())?;
@@ -135,23 +148,36 @@ impl CliHandler {
                     println!("Please input correct date");
                 }
             },
-            "ls" | "list" => {
+            SubCommand::ListAll => {
                 unimplemented!()
             },
-            "quit" | "exit" | "q" => {
-                return Err(Box::new(ExitNormally {}));
+            SubCommand::Quit => {
+                return Err(CliErr::Exit)
             }
-            "h" | "help" => {
+            SubCommand::Help => {
                 println!(r#"Available commands: ad, rm, chk, ls, h"#);
             },
             _ => {
-                println!("Unknown command: `{}`, to get more helps, please input `help` or `h`.", ops);
+                unreachable!()
             }
         }
 
         Ok(())
     }
 }
+/*
+impl FromStr for Date {
+    type Err = time::error::Parse;
+
+    fn from_str(source: &str) -> Result<Self, Self::Err> {
+        let f1 = time::macros::format_description!("[year]-[month]-[day]");
+        let f2 = time::macros::format_description!("[year][month][day]");
+
+        Date::parse(source, &f1)
+            .or_else(|_| time::Date::parse(source, &f2))
+    }
+}
+ */
 pub fn parse_to_date(source: &str) -> Option<time::Date> {
     let f1 = time::macros::format_description!("[year]-[month]-[day]");
     let f2 = time::macros::format_description!("[year][month][day]");
@@ -172,7 +198,46 @@ pub enum Mode {
     Interactive,
     Once,
 }
-struct ExitNormally;
-impl Debug for ExitNormally { fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { unreachable!() } }
-impl Display for ExitNormally { fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { unreachable!() } }
-impl Error for ExitNormally {}
+
+enum CliErr {
+    Exit,
+    Io(std::io::Error),
+    Db(rusqlite::Error),
+    InvalidDate(String),
+    UnknownCommand(String),
+}
+
+
+impl From<rusqlite::Error> for CliErr {
+    fn from(err: rusqlite::Error) -> Self {
+        CliErr::Db(err)
+    }
+}
+impl From<std::io::Error> for CliErr {
+    fn from(err: std::io::Error) -> Self {
+        CliErr::Io(err)
+    }
+}
+#[derive(Debug, Clone, Copy)]
+enum SubCommand {
+    Add,
+    Remove,
+    Check,
+    ListAll,
+    Quit,
+    Help,
+}
+impl FromStr for SubCommand {
+    type Err = CliErr;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "ad" | "add" => Ok(SubCommand::Add),
+            "rm" | "remove" => Ok(SubCommand::Remove),
+            "chk" | "check" => Ok(SubCommand::Check),
+            "ls" | "list" => Ok(SubCommand::ListAll),
+            "h" | "help" => Ok(SubCommand::Help),
+            "quit" | "exit" | "q" => Ok(SubCommand::Quit),
+            _ => Err(CliErr::UnknownCommand(s.to_string())),
+        }
+    }
+}
