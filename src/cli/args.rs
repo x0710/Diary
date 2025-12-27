@@ -20,3 +20,7 @@ pub struct Args {
     #[clap(short, long)]
     pub interactive: bool,
 }
+pub fn editor() -> String {
+    std::env::var("VISUAL")
+        .or_else(|_| std::env::var("EDITOR")).unwrap_or("vi".to_string())
+}

@@ -1,6 +1,6 @@
 use std::error::Error;
 use time::{Date, Month};
-use crate::cli::run::CliHandler;
+use crate::cli::handler::CliHandler;
 use crate::model::day::Day;
 use crate::model::event::Event;
 use crate::storage::db_mgr::DatabaseManager;
