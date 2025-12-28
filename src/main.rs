@@ -1,15 +1,13 @@
 use std::error::Error;
-use time::{Date, Month};
-use crate::cli::handler::CliHandler;
-use crate::model::day::Day;
-use crate::model::event::Event;
+use rusqlite::Connection;
 use crate::storage::db_mgr::DatabaseManager;
 
 const DB_NAME: &str = "diary.db";
 
 mod model;
 mod storage;
-mod cli;
+mod interface;
+use crate::interface::cli::terminal::CliSession;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let prjdir = directories::ProjectDirs::from("x0710", "x0710", "diary")
@@ -17,10 +15,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let data_dir = prjdir.data_dir();
     std::fs::create_dir_all(&data_dir).unwrap();
     let db_path = data_dir.join(DB_NAME);
-    let db_mgr = DatabaseManager::with_path(db_path.to_str()
-        .expect("Could not get database path")).unwrap();
+    let db = Connection::open(db_path)?;
 
-    let cli = CliHandler::new(db_mgr)?;
+    let cli = CliSession::new(db);
     cli.run();
 
     Ok(())

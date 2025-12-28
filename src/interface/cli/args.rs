@@ -1,3 +1,4 @@
+const DEFAULT_EDITOR: &str = "vi";
 #[derive(clap::Parser, Debug, Clone)]
 pub struct Args {
     /// Diary for special date
@@ -23,7 +24,11 @@ pub struct Args {
 #[cfg(target_os = "linux")]
 pub fn editor() -> String {
     std::env::var("VISUAL")
-        .or_else(|_| std::env::var("EDITOR")).unwrap_or("vi".to_string())
+        .or_else(|_| std::env::var("EDITOR"))
+        .unwrap_or_else(|_| {
+            eprintln!("Could not find $VISUAL or $EDITOR, using {} editor", DEFAULT_EDITOR);
+            String::from(DEFAULT_EDITOR)
+        })
 }
 #[cfg(target_os = "windows")]
 pub fn editor() -> String {

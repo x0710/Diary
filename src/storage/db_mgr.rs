@@ -1,8 +1,10 @@
 use rusqlite::{params, Connection};
 use crate::model::day::Day;
 use crate::model::event::Event;
+
 const DATE_FORMAT: &[time::format_description::FormatItem<'static>] =
     time::macros::format_description!("[year]-[month]-[day]");
+
 pub struct DatabaseManager {
     conn: Connection,
 }
@@ -34,9 +36,15 @@ impl DatabaseManager {
         )?;
         Ok(res)
     }
-    pub fn with_path(db_path: &str) -> Result<Self, rusqlite::Error> {
+    pub fn from_path(db_path: &str) -> Result<Self, rusqlite::Error> {
         let conn = Connection::open(db_path)?;
 
+        conn.try_into()
+    }
+}
+impl TryFrom<Connection> for DatabaseManager {
+    type Error = rusqlite::Error;
+    fn try_from(conn: Connection) -> Result<Self, Self::Error> {
         conn.execute(r#"
         CREATE TABLE IF NOT EXISTS day (
             date TEXT NOT NULL PRIMARY KEY,
