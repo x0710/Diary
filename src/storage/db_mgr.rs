@@ -1,14 +1,13 @@
 use rusqlite::{params, Connection};
-use rusqlite::fallible_iterator::FallibleIterator;
 use crate::model::day::Day;
 use crate::model::event::Event;
 const DATE_FORMAT: &[time::format_description::FormatItem<'static>] =
     time::macros::format_description!("[year]-[month]-[day]");
 pub struct DatabaseManager {
-    conn: rusqlite::Connection,
+    conn: Connection,
 }
 impl DatabaseManager {
-    pub fn remove_day(&self, date: &time::Date) -> Result<usize, rusqlite::Error> {
+    pub fn remove_day(&self, date: time::Date) -> Result<usize, rusqlite::Error> {
         self.conn.execute("DELETE FROM day WHERE date=?",
         [date.format(DATE_FORMAT).unwrap()])
     }
@@ -19,13 +18,13 @@ impl DatabaseManager {
         res.collect()
 
     }
-    pub fn read_day(&self, date: &time::Date) -> Option<Day> {
+    pub fn read_day(&self, date: time::Date) -> Option<Day> {
         self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
         params![date.format(DATE_FORMAT).unwrap()], |row|
             row_to_day(row)
         ).ok()
     }
-    pub fn add_day(&self, day: &Day) -> Result<usize, rusqlite::Error> {
+    pub fn add_day(&self, day: Day) -> Result<usize, rusqlite::Error> {
         let res = self.conn.execute(
             "INSERT OR REPLACE INTO  day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
             (day.date().format(DATE_FORMAT).unwrap(),
@@ -36,7 +35,7 @@ impl DatabaseManager {
         Ok(res)
     }
     pub fn with_path(db_path: &str) -> Result<Self, rusqlite::Error> {
-        let conn = rusqlite::Connection::open(db_path)?;
+        let conn = Connection::open(db_path)?;
 
         conn.execute(r#"
         CREATE TABLE IF NOT EXISTS day (

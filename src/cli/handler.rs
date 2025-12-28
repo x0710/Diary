@@ -23,12 +23,8 @@ impl CliHandler {
         let args = Args::parse();
         let mode = if args.interactive { Interactive } else {
             if args.time.is_none() {
-                // Args::command().error(
-                //     ErrorKind::MissingSubcommand,
-                //     "Time is required for once mode"
-                // ).exit()
                 Interactive
-            }else {Once}
+            }else {unimplemented!();Once}
 
         };
         Ok(Self {
@@ -49,16 +45,12 @@ impl CliHandler {
         if let Some(event) = self.args.event.as_deref() {
             // write diary
             let event = Event::new(event);
-            let d = Day::new(
-                date,
-                event,
-                None,
-                None,
-            );
-            self.conn.add_day(&d).expect("Could not add day");
+            let d = Day::from_date(date)
+                .with_event(&event);
+            self.conn.add_day(d).expect("Could not add day");
         }else {
             // check the day
-            let res = self.conn.read_day(&date).expect("This day has not yet been recorded.");
+            let res = self.conn.read_day(date).expect("This day has not yet been recorded.");
             println!("{}", res);
         }
     }
@@ -104,19 +96,20 @@ impl CliHandler {
         match ops {
             SubCommand::Add => {
                 let date = date?;
-                let initial = self.conn.read_day(&date)
+                let initial = self.conn.read_day(date)
                     .map_or(String::from(""), |day| day.event().instruct.clone());
                 let initial = edit_with_editor(&initial)?;
-                let day = Day::from_event(&date, &initial.parse::<Event>().unwrap());
-                self.conn.add_day(&day)?;
+                let day = Day::from_event(&initial.parse::<Event>().unwrap())
+                    .with_date(date);
+                self.conn.add_day(day)?;
             },
             SubCommand::Remove => {
                 let date = date?;
-                self.conn.remove_day(&date)?;
+                self.conn.remove_day(date)?;
             },
             SubCommand::Check => {
                 let date = date?;
-                let initial = self.conn.read_day(&date)
+                let initial = self.conn.read_day(date)
                     .map_or(String::from(""), |day| day.event().instruct.clone());
                 println!("{}", initial);
             },
@@ -128,7 +121,7 @@ impl CliHandler {
                 return Err(CliErr::Exit)
             }
             SubCommand::Help => {
-                println!(r#"Available commands: ad, rm, chk, ls, h"#);
+                println!(r#"Available commands: add, delete, check, ls, help"#);
             },
             _ => {
                 unreachable!()
@@ -138,19 +131,6 @@ impl CliHandler {
         Ok(())
     }
 }
-/*
-impl FromStr for Date {
-    type Err = time::error::Parse;
-
-    fn from_str(source: &str) -> Result<Self, Self::Err> {
-        let f1 = time::macros::format_description!("[year]-[month]-[day]");
-        let f2 = time::macros::format_description!("[year][month][day]");
-
-        Date::parse(source, &f1)
-            .or_else(|_| time::Date::parse(source, &f2))
-    }
-}
- */
 pub fn parse_to_date(source: &str) -> Result<time::Date, CliErr> {
     let source = source.trim();
     let today = time::OffsetDateTime::now_utc().date();
@@ -162,7 +142,7 @@ pub fn parse_to_date(source: &str) -> Result<time::Date, CliErr> {
         _ => {
             let f1 = time::macros::format_description!("[year]-[month]-[day]");
             let f2 = time::macros::format_description!("[year][month][day]");
-            time::Date::parse(source, f1).or_else(|e| {
+            time::Date::parse(source, f1).or_else(|_| {
                 time::Date::parse(source, f2)
             }).map_err(|e| CliErr::InvalidDate(e.to_string()))
         }
@@ -198,7 +178,7 @@ pub enum Mode {
 }
 
 #[derive(Debug)]
-enum CliErr {
+pub enum CliErr {
     Exit,
     Io(std::io::Error),
     Db(rusqlite::Error),
@@ -206,7 +186,7 @@ enum CliErr {
     UnknownCommand(String),
 }
 
-impl From<time::error::Parse> for CliErr {
+impl From<Parse> for CliErr {
     fn from(value: Parse) -> Self {
         CliErr::InvalidDate(value.to_string())
     }
@@ -237,7 +217,7 @@ impl FromStr for SubCommand {
         match s {
             "ad" | "add" => Ok(SubCommand::Add),
             "rm" | "remove" | "delete" | "del" => Ok(SubCommand::Remove),
-            "chk" | "check" | "read" => Ok(SubCommand::Check),
+            "chk" | "check" | "read" | "show" => Ok(SubCommand::Check),
             "ls" | "list" => Ok(SubCommand::ListAll),
             "h" | "help" => Ok(SubCommand::Help),
             "quit" | "exit" | "q" => Ok(SubCommand::Quit),

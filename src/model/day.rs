@@ -5,27 +5,15 @@ use crate::model::event::Event;
 pub struct Day {
     date: time::Date,
     event: Event,
-    weather: Option<String>,
-    mood: Option<String>,
+    weather: Option<Box<str>>,
+    mood: Option<Box<str>>,
 }
 impl Day {
-    pub fn mood(&self) -> Option<&str> {
-        self.mood.as_deref()
-    }
-    pub fn weather(&self) -> Option<&str> {
-        self.weather.as_deref()
-    }
-    pub fn event(&self) -> &Event {
-        &self.event
-    }
-    pub fn date(&self) -> &time::Date {
-        &self.date
-    }
     pub fn new(
         date: time::Date,
         event: Event,
-        weather: Option<String>,
-        mood: Option<String>,
+        weather: Option<Box<str>>,
+        mood: Option<Box<str>>,
     ) -> Day {
         Day {
             date,
@@ -34,22 +22,55 @@ impl Day {
             mood,
         }
     }
-    pub fn from_event(date: &time::Date, event: &Event) -> Self {
-        Self::new(
-            date.clone(),
-            event.clone(),
-            None,
-            None,
-        )
+    pub fn from_event(event: &Event) -> Self {
+        Self {
+            event: event.clone(),
+            ..Self::default()
+        }
     }
+    pub fn from_date(date: time::Date) -> Self {
+        Self {
+            date: date,
+            ..Self::default()
+        }
+    }
+    pub fn with_event(mut self, event: &Event) -> Self {
+        self.event = event.clone();
+        self
+    }
+    pub fn with_date(mut self, date: time::Date) -> Self {
+        self.date = date;
+        self
+    }
+    pub fn with_weather(mut self, w: impl Into<Box<str>>) -> Self {
+        self.weather = Some(w.into());
+        self
+    }
+    pub fn with_mood(mut self, m: impl Into<Box<str>>) -> Self {
+        self.mood = Some(m.into());
+        self
+    }
+    pub fn mood(&self) -> Option<&str> { self.mood.as_deref() }
+    pub fn weather(&self) -> Option<&str> { self.weather.as_deref() }
+    pub fn event(&self) -> &Event { &self.event }
+    pub fn date(&self) -> time::Date { self.date }
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, r#"date: {}, weather: {}, mood: {}, Event: {}"#,
-            self.date,
-            self.weather.as_deref().map_or_else(|| "".to_string(), |w| format!(", weather: {}", w)),
-            self.mood.as_deref().map_or_else(|| "".to_string(), |w| format!(", mood: {}", w)),
-            self.event,
-        )
+        write!(f, "[Date: {}, {}]", self.date, self.date.weekday())?;
+        if let Some(w) = &self.weather { write!(f, " [Weather: {}]", w)?; }
+        if let Some(m) = &self.mood { write!(f, " [Mood: {}]", m)?; }
+        write!(f, "\nEvent: {}", self.event)
+    }
+}
+impl Default for Day {
+    fn default() -> Self {
+        let now = time::OffsetDateTime::now_utc();
+        Self {
+            date: now.date(),
+            event: Event::default(),
+            weather: None,
+            mood: None,
+        }
     }
 }

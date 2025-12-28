@@ -25,3 +25,10 @@ impl FromStr for Event {
         Ok(Event::new(s))
     }
 }
+impl Default for Event {
+    fn default() -> Self {
+        Self {
+            instruct: "".to_string(),
+        }
+    }
+}
