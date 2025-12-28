@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::process::ExitStatus;
@@ -19,19 +18,18 @@ pub struct CliHandler {
     mode: Mode,
 }
 impl CliHandler {
-    pub fn new(conn: DatabaseManager) -> Result<CliHandler, Box<dyn Error>> {
+    pub fn new(conn: DatabaseManager) -> CliHandler {
         let args = Args::parse();
         let mode = if args.interactive { Interactive } else {
             if args.time.is_none() {
                 Interactive
             }else {unimplemented!();Once}
-
         };
-        Ok(Self {
+        Self {
             conn,
             args,
             mode,
-        })
+        }
     }
     pub fn run(&self) {
         match self.mode {
@@ -60,7 +58,7 @@ impl CliHandler {
         loop {
             match rl.readline(">: ") {
                 Ok(line) => {
-                    match self.deal_command(line.as_str()) {
+                    match self.exec_command(line.as_str()) {
                         Err(CliErr::Db(err)) => {
                             eprintln!("Database error: {}", err);
                         },
@@ -88,7 +86,7 @@ impl CliHandler {
             }
         }
     }
-    fn deal_command(&self, command: &str) -> Result<(), CliErr> {
+    pub fn exec_command(&self, command: &str) -> Result<(), CliErr> {
         let (ops, arg) = command.split_once(' ').unwrap_or((command, ""));
         let ops = ops.parse::<SubCommand>()?;
 
