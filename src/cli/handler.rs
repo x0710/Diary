@@ -121,7 +121,8 @@ impl CliHandler {
                 println!("{}", initial);
             },
             SubCommand::ListAll => {
-                unimplemented!()
+                let days = self.conn.read_all()?;
+                days.iter().for_each(|day| println!("{}", day));
             },
             SubCommand::Quit => {
                 return Err(CliErr::Exit)
@@ -235,7 +236,7 @@ impl FromStr for SubCommand {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "ad" | "add" => Ok(SubCommand::Add),
-            "rm" | "remove" => Ok(SubCommand::Remove),
+            "rm" | "remove" | "delete" | "del" => Ok(SubCommand::Remove),
             "chk" | "check" | "read" => Ok(SubCommand::Check),
             "ls" | "list" => Ok(SubCommand::ListAll),
             "h" | "help" => Ok(SubCommand::Help),
