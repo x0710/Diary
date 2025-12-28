@@ -66,7 +66,7 @@ diary add 2025-01-01 "今天发生的事情"
 ### 查看日记
 
 ```bash
-diary read 2025-01-01
+diary check 2025-01-01
 ```
 
 ---

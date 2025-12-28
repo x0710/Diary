@@ -64,7 +64,7 @@ Supported date formats:
 ### Read an entry
 
 ```bash
-diary read 2025-01-01
+diary check 2025-01-01
 ```
 
 ### List entries (WIP)
