@@ -80,15 +80,15 @@ impl CliHandler {
                         },
                         Err(CliErr::UnknownCommand(cmd)) => {
                             eprintln!("Unknown command: {}", cmd);
-                        }
-                        Err(CliErr::Exit) | Ok(_) => (),
+                        },
+                        Err(CliErr::Exit) => {
+                            println!("Have a nice day!");
+                            break;
+                        },
+                        Ok(_) => (),
                     }
                 },
-                Err(ReadlineError::Eof) => {
-                    println!("Have a nice day!");
-                    break;
-                },
-                Err(ReadlineError::Interrupted) => {
+                Err(ReadlineError::Eof) | Err(ReadlineError::Interrupted) => {
                     println!("Have a nice day!");
                     break;
                 },
@@ -236,7 +236,7 @@ impl FromStr for SubCommand {
         match s {
             "ad" | "add" => Ok(SubCommand::Add),
             "rm" | "remove" => Ok(SubCommand::Remove),
-            "chk" | "check" => Ok(SubCommand::Check),
+            "chk" | "check" | "read" => Ok(SubCommand::Check),
             "ls" | "list" => Ok(SubCommand::ListAll),
             "h" | "help" => Ok(SubCommand::Help),
             "quit" | "exit" | "q" => Ok(SubCommand::Quit),
