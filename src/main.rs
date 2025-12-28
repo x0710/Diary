@@ -1,6 +1,5 @@
 use std::error::Error;
 use rusqlite::Connection;
-use crate::storage::db_mgr::DatabaseManager;
 
 const DB_NAME: &str = "diary.db";
 

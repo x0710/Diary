@@ -36,11 +36,6 @@ impl DatabaseManager {
         )?;
         Ok(res)
     }
-    pub fn from_path(db_path: &str) -> Result<Self, rusqlite::Error> {
-        let conn = Connection::open(db_path)?;
-
-        conn.try_into()
-    }
 }
 impl TryFrom<Connection> for DatabaseManager {
     type Error = rusqlite::Error;
