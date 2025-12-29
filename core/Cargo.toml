@@ -1,0 +1,8 @@
+[package]
+name = "diary-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+time = { version = "0.3.44", features = ["formatting", "parsing", "macros"] }

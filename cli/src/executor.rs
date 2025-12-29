@@ -1,10 +1,10 @@
 use std::str::FromStr;
 use time::error::Parse;
 use time::format_description::BorrowedFormatItem;
-use crate::interface::cli::terminal;
-use crate::model::day::Day;
-use crate::model::event::Event;
-use crate::storage::db_mgr::DatabaseManager;
+use crate::terminal;
+use diary_core::model::day::Day;
+use diary_core::model::event::Event;
+use diary_core::storage::db_mgr::DatabaseManager;
 
 pub struct Executor {
     conn: DatabaseManager,

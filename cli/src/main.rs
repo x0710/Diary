@@ -1,12 +1,8 @@
 use std::error::Error;
 use rusqlite::Connection;
+use diary_cli::terminal::CliSession;
 
 const DB_NAME: &str = "diary.db";
-
-mod model;
-mod storage;
-mod interface;
-use crate::interface::cli::terminal::CliSession;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let prjdir = directories::ProjectDirs::from("x0710", "x0710", "diary")

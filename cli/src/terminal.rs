@@ -3,9 +3,9 @@ use std::path::Path;
 use std::process::ExitStatus;
 use clap::Parser;
 use rustyline::error::ReadlineError;
-use crate::interface::cli::args;
-use crate::interface::cli::args::Args;
-use crate::interface::cli::executor::{CliErr, Executor};
+use crate::args;
+use crate::args::Args;
+use crate::executor::{CliErr, Executor};
 
 pub struct CliSession {
     pub args: Args,
