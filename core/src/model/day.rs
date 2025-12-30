@@ -1,16 +1,17 @@
 use std::fmt::Display;
 use crate::model::event::Event;
+use crate::base::date::Date;
 
 #[derive(Debug)]
 pub struct Day {
-    date: time::Date,
+    date: Date,
     event: Event,
     weather: Option<Box<str>>,
     mood: Option<Box<str>>,
 }
 impl Day {
     pub fn new(
-        date: time::Date,
+        date: Date,
         event: Event,
         weather: Option<Box<str>>,
         mood: Option<Box<str>>,
@@ -28,17 +29,17 @@ impl Day {
             ..Self::default()
         }
     }
-    pub fn from_date(date: time::Date) -> Self {
+    pub fn from_date(date: Date) -> Self {
         Self {
             date: date,
             ..Self::default()
         }
     }
-    pub fn with_event(mut self, event: &Event) -> Self {
+    pub fn with_event(mut self, event: Event) -> Self {
         self.event = event.clone();
         self
     }
-    pub fn with_date(mut self, date: time::Date) -> Self {
+    pub fn with_date(mut self, date: Date) -> Self {
         self.date = date;
         self
     }
@@ -53,11 +54,11 @@ impl Day {
     pub fn mood(&self) -> Option<&str> { self.mood.as_deref() }
     pub fn weather(&self) -> Option<&str> { self.weather.as_deref() }
     pub fn event(&self) -> &Event { &self.event }
-    pub fn date(&self) -> time::Date { self.date }
+    pub fn date(&self) -> Date { self.date }
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[Date: {}, {}]", self.date, self.date.weekday())?;
+        write!(f, "[Date: {}, {}]", self.date.date(), self.date.date().weekday())?;
         if let Some(w) = &self.weather { write!(f, " [Weather: {}]", w)?; }
         if let Some(m) = &self.mood { write!(f, " [Mood: {}]", m)?; }
         write!(f, "\nEvent: {}", self.event)
@@ -67,7 +68,7 @@ impl Default for Day {
     fn default() -> Self {
         let now = time::OffsetDateTime::now_utc();
         Self {
-            date: now.date(),
+            date: now.date().into(),
             event: Event::default(),
             weather: None,
             mood: None,
