@@ -13,12 +13,16 @@ impl Executor {
         match command {
             Command::Add(date, ctx) => _ = self.handle_add(*date, ctx.as_deref().unwrap_or("")),
             Command::Remove(date) => _ = self.handle_del(*date),
-            Command::Check(date) => res.push(self.handle_check(*date)?),
+            Command::Check(date) => {
+                if let Some(v) = self.handle_check(*date)? {
+                    res.push(v);
+                }
+            }
             Command::ListAll => res.extend(self.handle_list_all()?)
         }
         Ok(res)
     }
-    fn handle_check(&self, date: Date) -> Result<Day, rusqlite::Error> {
+    fn handle_check(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
         self.conn.read_day(date)
     }
     fn handle_list_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
@@ -31,6 +35,9 @@ impl Executor {
         self.conn.add_day(Day::default()
             .with_date(date)
             .with_event(Event::new(ctx)))
+    }
+    pub fn conn(&self) -> &DatabaseManager {
+        &self.conn
     }
 }
 impl From<DatabaseManager> for Executor {

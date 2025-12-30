@@ -15,21 +15,26 @@ impl DatabaseManager {
         [date.date().format(DATE_FORMAT).unwrap()])
     }
     pub fn read_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
-        let mut stmt = self.conn.prepare("SELECT date, event, weather, mood FROM day ORDER BY date DESC")?;
+        let mut stmt = self.conn.prepare("SELECT date, event, weather, mood FROM day ORDER BY date ASC")?;
         let res = stmt
             .query_map((), |row| row_to_day(row))?;
         res.collect()
 
     }
-    pub fn read_day(&self, date: Date) -> Result<Day, rusqlite::Error> {
-        self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
+    pub fn read_day(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
+        let r = self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
         params![date.date().format(DATE_FORMAT).unwrap()], |row|
             row_to_day(row)
-        )
+        );
+        match r {
+            Ok(day) => Ok(Some(day)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e),
+        }
     }
     pub fn add_day(&self, day: Day) -> Result<usize, rusqlite::Error> {
         let res = self.conn.execute(
-            "INSERT OR REPLACE INTO  day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
+            "INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
             (day.date().date().format(DATE_FORMAT).unwrap(),
              day.event().instruct.to_string(),
              day.weather(),

@@ -34,3 +34,30 @@ impl FromStr for SubCommand {
         }
     }
 }
+impl FromStr for Command {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut args = s.splitn(3, ' ');
+        let sub = args.next().unwrap_or_default().parse::<SubCommand>()?;
+        let date = args.next().unwrap_or_default();
+        let ctx = args.next();
+
+        match sub {
+            SubCommand::Add => {
+                let date = date.parse::<Date>()?;
+                Ok(Command::Add(date, ctx.map(str::to_string)))
+            }
+            SubCommand::Remove => {
+                let date = date.parse::<Date>()?;
+                Ok(Command::Remove(date))
+            }
+            SubCommand::Check => {
+                let date = date.parse::<Date>()?;
+                Ok(Command::Check(date))
+            }
+            SubCommand::ListAll => Ok(Command::ListAll),
+            // SubCommand::Help => Ok(Command::Help),
+            // SubCommand::Quit => Ok(Command::Quit),
+        }
+    }
+}
