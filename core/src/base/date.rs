@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use time::format_description::BorrowedFormatItem;
+use time::Month;
 use crate::base::error::Error;
 
 #[derive(Debug, Clone, Copy)]
@@ -9,6 +10,10 @@ pub struct Date {
 impl Date {
     pub fn date(&self) -> time::Date {
         self.date
+    }
+    pub fn new(year: i32, month: u8, day: u8) -> Result<Self, time::error::Error> {
+        let d = time::Date::from_calendar_date(year, Month::try_from(month)?, day)?;
+        Ok(Date { date: d })
     }
 }
 const DATE_FORMAT1: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year]-[month]-[day]");
