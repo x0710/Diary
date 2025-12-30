@@ -3,19 +3,24 @@ use std::path::Path;
 use std::process::ExitStatus;
 use clap::Parser;
 use rustyline::error::ReadlineError;
+use diary_core::base::executor::Executor;
+use diary_core::storage::db_mgr::DatabaseManager;
 use crate::args;
 use crate::args::Args;
-use crate::executor::{CliErr, Executor};
+use crate::error::CliError;
+use crate::executor::CliExecutor;
 
 pub struct CliSession {
     pub args: Args,
-    executor: Executor,
+    executor: CliExecutor,
 }
 impl CliSession {
     pub fn new(conn: rusqlite::Connection) -> Self {
         let args = Args::parse();
-        let exec = Executor::new(conn.try_into()
-            .expect("database connection should be successful"));
+        let exec = DatabaseManager::try_from(conn)
+            .unwrap();
+        let exec = Executor::from(exec);
+        let exec = CliExecutor::from(exec);
         Self {
             args,
             executor: exec,
@@ -33,24 +38,14 @@ impl CliSession {
         loop {
             match rl.readline(">: ") {
                 Ok(line) => {
-                    match self.executor.exec_command(line.as_str()) {
-                        Err(CliErr::Db(err)) => {
-                            eprintln!("Database error: {}", err);
-                        },
-                        Err(CliErr::Io(err)) => {
-                            eprintln!("IO Error: {}", err);
-                        },
-                        Err(CliErr::InvalidDate(err)) => {
-                            eprintln!("Invalid date: {}", err);
-                        },
-                        Err(CliErr::UnknownCommand(cmd)) => {
-                            eprintln!("Unknown command: {}", cmd);
-                        },
-                        Err(CliErr::Exit) => {
-                            println!("Have a nice day!");
-                            break;
-                        },
+                    match self.executor.exec_command(&line) {
                         Ok(_) => (),
+                        Err(CliError::Quit) => break,
+                        Err(CliError::InvalidArgs(s)) => println!("Invalid args: {}", s),
+                        Err(CliError::Io(s)) => println!("IO error: {}", s),
+                        Err(CliError::UnknownCommand(s)) => println!("Unknown command: {}", s),
+
+                        _ => {println!("?I don't know what happened.")}
                     }
                 },
                 Err(ReadlineError::Eof) | Err(ReadlineError::Interrupted) => {
@@ -62,7 +57,7 @@ impl CliSession {
         }
     }
 }
-pub fn edit_with_editor(s: &str) -> Result<String, CliErr> {
+pub fn edit_with_editor(s: &str) -> Result<String, CliError> {
     let mut editor = tempfile::NamedTempFile::new()?;
     editor.write_all(s.as_bytes())?;
     editor.flush()?;
