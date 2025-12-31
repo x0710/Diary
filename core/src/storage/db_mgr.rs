@@ -10,6 +10,10 @@ pub struct DatabaseManager {
     conn: Connection,
 }
 impl DatabaseManager {
+    pub fn from_path(path: &std::path::Path) -> Result<Self, rusqlite::Error> {
+        let conn = rusqlite::Connection::open(path)?;
+        Ok(DatabaseManager { conn })
+    }
     pub fn remove_day(&self, date: Date) -> Result<usize, rusqlite::Error> {
         self.conn.execute("DELETE FROM day WHERE date=?",
         [date.date().format(DATE_FORMAT).unwrap()])
