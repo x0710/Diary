@@ -18,6 +18,11 @@ impl From<Date> for NaiveDate {
         )
     }
 }
+impl From<Date> for diary_core::base::date::Date {
+    fn from(date: Date) -> Self {
+        date.date
+    }
+}
 impl Default for Date {
     fn default() -> Self {
         diary_core::base::date::Date::default().into()
