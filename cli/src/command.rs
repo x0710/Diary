@@ -17,9 +17,22 @@ impl CliCommand {
         match self {
             CliCommand::Command(comm) => exec.exec(comm)
                 .map_err(|e| e.into()),
-            CliCommand::Help => todo!(),
+            CliCommand::Help => {
+                self.handle_help();
+                Ok(Vec::new())
+            }
             CliCommand::Quit => Err(CliError::Quit),
         }
+    }
+    fn handle_help(&self) {
+        println!(r#"
+Available commands:
+  add <date>    - Add or edit an entry (e.g., add today, add 20251225, add 2025-12-25)
+  remove <date> - Delete an entry
+  check <date>  - View a specific entry
+  list          - List all entries
+  quit/exit     - Close the application
+"#);
     }
 }
 impl FromStr for CliCommand {

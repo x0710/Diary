@@ -1,5 +1,5 @@
 use std::process::exit;
-use chrono::{Datelike, Duration, NaiveDate};
+use chrono::{Duration, NaiveDate};
 use eframe::egui;
 use egui::*;
 use eframe::Frame;
@@ -31,7 +31,7 @@ impl App {
     }
 }
 impl eframe::App for App {
-    fn update(&mut self, ctx: &Context, frame: &mut Frame) {
+    fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         ctx.set_visuals(Visuals::default());
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {

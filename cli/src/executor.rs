@@ -21,23 +21,13 @@ impl CliExecutor {
             *ctx = Some(s?);
         }
         let res = command.exec(&self.exec)?;
+        // 
         match command {
-            CliCommand::Help => self.handle_help(),
             CliCommand::Command(Command::Check(_)) => res.iter().for_each(|v| println!("{}", v.event())),
             CliCommand::Command(Command::ListAll) => res.iter().for_each(|x| println!("{}", x)),
             _ => (),
         }
         Ok(())
-    }
-    fn handle_help(&self) {
-        println!(r#"
-Available commands:
-  add <date>    - Add or edit an entry (e.g., add today, add 20251225, add 2025-12-25)
-  remove <date> - Delete an entry
-  check <date>  - View a specific entry
-  list          - List all entries
-  quit/exit     - Close the application
-"#);
     }
 
 }
