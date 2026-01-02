@@ -46,42 +46,18 @@ impl eframe::App for App {
         SidePanel::left("side_panel").resizable(false)
             .min_width(130.)
             .show(ctx, |ui| {
-            ui.add(DatePickerButton::new(&mut self.date_selected));
-            if ui.add(Button::new("Commit")).clicked() {
-                // Commit
-                match self.executor.update_day(&self.day) {
-                    Ok(_) => {
-                        println!("{}, COMMIT COMPLETE", self.date_selected);
-                    },
-                    Err(e) => self.error = Some(e.into()),
-                }
-            }
-            /*
-            if ui.button("ERROR").clicked() {
-                self.error = Some(Error::UnknownCommand("Error-Test".to_string()));
-            }
-             */
-            ui.horizontal_wrapped(|ui| {
-                if ui.add(Button::new("Before")).clicked() {
-                    self.date_selected -= Duration::days(1);
-                }
-                if ui.add(Button::new("Next")).clicked() {
-                    self.date_selected += Duration::days(1);
-                }
-            });
-        });
-        CentralPanel::default().show(ctx, |ui| {
-            ui.centered_and_justified(|ui| {
-                if ui.text_edit_multiline(&mut self.day.event.instruct).changed() {
-                    // When input text, what happen?
-                }
-            });
-        });
-        Window::new("MISC")
-            .default_pos(Pos2::new(0.0, 150.0))
-            // .default_open(false)
-            .show(ctx, |ui| {
-                // Weather
+                ui.add(DatePickerButton::new(&mut self.date_selected));
+                ui.horizontal_wrapped(|ui| {
+                    if ui.add(Button::new("Commit")).clicked() {
+                        match self.executor.update_day(&self.day) {
+                            Ok(_) => {println!("{}, COMMIT COMPLETE", self.date_selected)},
+                            Err(e) => self.error = Some(e.into()),
+                        }
+                    }
+                    if ui.add(Button::new("Cancel")).clicked() {
+                        todo!()
+                    }
+                });
                 let weather_input = TextEdit::singleline(&mut self.day.weather)
                     .hint_text("Weather")
                     .desired_width(100.);
@@ -101,6 +77,26 @@ impl eframe::App for App {
                     let face_rec = ui.allocate_exact_size([65., 15.].into(), Sense::empty());
                     ui.put(face_rec.0, face)
                 });
+                /*
+                if ui.button("ERROR").clicked() {
+                    self.error = Some(Error::UnknownCommand("Error-Test".to_string()));
+                }
+                 */
+                ui.horizontal_wrapped(|ui| {
+                    if ui.add(Button::new("Before")).clicked() {
+                        self.date_selected -= Duration::days(1);
+                    }
+                    if ui.add(Button::new("Next")).clicked() {
+                        self.date_selected += Duration::days(1);
+                    }
+                });
+            });
+        CentralPanel::default().show(ctx, |ui| {
+            ui.centered_and_justified(|ui| {
+                if ui.text_edit_multiline(&mut self.day.event.instruct).changed() {
+                    // When input text, what happen?
+                }
+            });
         });
         self.may_modal(ctx);
         self.update_day();
@@ -196,7 +192,7 @@ impl App {
                 if ui.button("OK").clicked() {
                     self.error.take();
                 }
-        });
+            });
     }
 }
 fn mood_to_face(mood: f32) -> (&'static str, Color32) {
