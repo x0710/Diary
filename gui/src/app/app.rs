@@ -1,4 +1,3 @@
-use std::process::exit;
 use chrono::{Duration, NaiveDate};
 use eframe::egui;
 use egui::*;
@@ -16,6 +15,8 @@ pub struct App {
     date_selected: NaiveDate,
 
     error: Option<Error>,
+
+    in_about_page: bool,
 }
 impl App {
     pub fn new(executor: GuiService) -> Self {
@@ -27,20 +28,24 @@ impl App {
             day,
             date_selected: td,
             error: None,
+            in_about_page: false,
         }
     }
 }
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        ctx.set_visuals(Visuals::default());
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            ui.horizontal_wrapped(|ui| {
-                if ui.button("Close").clicked() {
-                    exit(0);
-                }
+            MenuBar::new() .ui(ui, |ui| {
+                ui.menu_button("Help", |ui| {
+                    if ui.button("About Diary").clicked() {
+                        self.in_about_page = true;
+                    }
+                })
             })
         });
-        SidePanel::left("side_panel").resizable(false).show(ctx, |ui| {
+        SidePanel::left("side_panel").resizable(false)
+            .min_width(130.)
+            .show(ctx, |ui| {
             ui.add(DatePickerButton::new(&mut self.date_selected));
             if ui.add(Button::new("Commit")).clicked() {
                 // Commit
@@ -92,12 +97,12 @@ impl eframe::App for App {
                         .speed(0.015)
                         .prefix("Mood: ");
                     ui.add(mood_input);
-                    let face = Label::new(RichText::new(face).color(color).monospace());
-                    let face_rec = ui.allocate_exact_size([47., 15.].into(), Sense::empty());
+                    let face = Label::new(RichText::new(face).color(color));
+                    let face_rec = ui.allocate_exact_size([65., 15.].into(), Sense::empty());
                     ui.put(face_rec.0, face)
                 });
         });
-        self.error_modal(ctx);
+        self.may_modal(ctx);
         self.update_day();
     }
 }
@@ -109,11 +114,11 @@ impl App {
                 .unwrap_or(Day::default().with_date(date).into());
         }
     }
-    fn error_modal(&mut self, ctx: &Context) {
-        if self.error.is_none() {return}
+    /// enter modal mode
+    fn into_modal(&mut self, ctx: &Context) {
         let scn_rec = ctx.content_rect();
         // block
-        Area::new(egui::Id::from("err_modal"))
+        Area::new(egui::Id::from("modal"))
             .order(Order::Foreground)
             .fixed_pos(scn_rec.min)
             .show(ctx, |ui| {
@@ -126,6 +131,60 @@ impl App {
                     Color32::from_black_alpha(130),
                 );
             });
+    }
+    fn may_modal(&mut self, ctx: &Context) {
+        self.error_modal(ctx);
+        self.about_modal(ctx);
+    }
+    fn about_modal(&mut self, ctx: &Context) {
+        if !self.in_about_page {return}
+        Window::new("About")
+            .resizable(false)
+            .collapsible(false)
+            .order(Order::Foreground)
+            .anchor(Align2::CENTER_CENTER, [0.0, 0.0])
+            .show(ctx, |ui| {
+                ui.vertical(|ui| {
+                    // --- 第一行：标题 + 右对齐图标 ---
+                    ui.horizontal(|ui| {
+                        ui.heading("Diary");
+                        // 靠右对齐的图标区域
+                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                            let cur_rec = ui.available_rect_before_wrap();
+                            let github_icon = Image::new(include_image!("../../assets/github-mark-white.svg"));
+                            let icon_rec = Rect::from_min_size(
+                                [cur_rec.right()-55., cur_rec.top()+10.].into(),
+                                [50., 50.].into(),
+                            );
+
+                            if ui.put(icon_rec, github_icon).clicked() {
+                                ctx.open_url(OpenUrl::new_tab("https://github.com/x0710/Diary"))
+                            }
+
+                        });
+                    });
+                    ui.label(RichText::new(format!("v{}", env!("CARGO_PKG_VERSION"))).weak());
+                    ui.separator();
+                    ui.add_space(4.0);
+                    ui.label("A high-performance tool built with Rust and egui.");
+                    ui.label("BTW, it's always used in writing diary.");
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        ui.label("Created by");
+                        ui.hyperlink_to("JinhangGao", "https://github.com/x0710");
+                    });
+                    ui.add_space(20.0);
+                    ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                        if ui.button("  OK  ").clicked() {
+                            self.in_about_page = false;
+                        }
+                    });
+                });
+            });
+    }
+    fn error_modal(&mut self, ctx: &Context) {
+        if self.error.is_none() {return}
+        self.into_modal(ctx);
 
         Window::new("Error")
             .resizable(false)
