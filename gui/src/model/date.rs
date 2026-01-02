@@ -1,5 +1,6 @@
 use chrono::{Datelike, NaiveDate};
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Date {
     date: diary_core::base::date::Date,
 }
