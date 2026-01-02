@@ -11,7 +11,11 @@ impl Executor {
     pub fn exec(&self, command: &Command) -> Result<Vec<Day>, rusqlite::Error> {
         let mut res = vec![];
         match command {
-            Command::Add(date, ctx) => _ = self.handle_add(*date, ctx.as_deref().unwrap_or("")),
+            Command::Add(date, ctx) => _ = {
+                Day::default()
+                    .with_date(*date)
+                    .with_event(Event::new(ctx.as_deref().unwrap_or_default()))
+            },
             Command::Remove(date) => _ = self.handle_del(*date),
             Command::Check(date) => {
                 if let Some(v) = self.handle_check(*date)? {
@@ -22,19 +26,17 @@ impl Executor {
         }
         Ok(res)
     }
-    fn handle_check(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
+    pub fn handle_check(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
         self.conn.read_day(date)
     }
-    fn handle_list_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
+    pub fn handle_list_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
         self.conn.read_all()
     }
-    fn handle_del(&self, date: Date) -> Result<usize, rusqlite::Error> {
+    pub fn handle_del(&self, date: Date) -> Result<usize, rusqlite::Error> {
         self.conn.remove_day(date)
     }
-    fn handle_add(&self, date: Date, ctx: &str) -> Result<usize, rusqlite::Error> {
-        self.conn.add_day(Day::default()
-            .with_date(date)
-            .with_event(Event::new(ctx)))
+    pub fn handle_add(&self, day: &Day) -> Result<usize, rusqlite::Error> {
+        self.conn.add_day(day)
     }
     pub fn conn(&self) -> &DatabaseManager {
         &self.conn

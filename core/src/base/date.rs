@@ -3,7 +3,7 @@ use time::format_description::BorrowedFormatItem;
 use time::Month;
 use crate::base::error::Error;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Date {
     date: time::Date,
 }
@@ -47,7 +47,8 @@ impl From<time::Date> for Date {
 }
 impl Default for Date {
     fn default() -> Self {
-        let cur = time::OffsetDateTime::now_utc();
+        let cur = time::OffsetDateTime::now_local()
+            .unwrap_or(time::OffsetDateTime::now_utc());
         Self {
             date: cur.date(),
         }

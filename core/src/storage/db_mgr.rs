@@ -36,7 +36,7 @@ impl DatabaseManager {
             Err(e) => Err(e),
         }
     }
-    pub fn add_day(&self, day: Day) -> Result<usize, rusqlite::Error> {
+    pub fn add_day(&self, day: &Day) -> Result<usize, rusqlite::Error> {
         let res = self.conn.execute(
             "INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
             (day.date().date().format(DATE_FORMAT).unwrap(),

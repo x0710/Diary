@@ -2,19 +2,19 @@ use std::fmt::Display;
 use crate::model::event::Event;
 use crate::base::date::Date;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Day {
     date: Date,
     event: Event,
-    weather: Option<Box<str>>,
-    mood: Option<Box<str>>,
+    weather: Option<String>,
+    mood: Option<String>,
 }
 impl Day {
     pub fn new(
         date: Date,
         event: Event,
-        weather: Option<Box<str>>,
-        mood: Option<Box<str>>,
+        weather: Option<String>,
+        mood: Option<String>,
     ) -> Day {
         Day {
             date,
@@ -43,11 +43,11 @@ impl Day {
         self.date = date;
         self
     }
-    pub fn with_weather(mut self, w: impl Into<Box<str>>) -> Self {
+    pub fn with_weather(mut self, w: impl Into<String>) -> Self {
         self.weather = Some(w.into());
         self
     }
-    pub fn with_mood(mut self, m: impl Into<Box<str>>) -> Self {
+    pub fn with_mood(mut self, m: impl Into<String>) -> Self {
         self.mood = Some(m.into());
         self
     }
