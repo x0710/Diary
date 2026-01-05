@@ -1,18 +1,24 @@
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, Transaction};
 use crate::model::day::Day;
 use crate::model::event::Event;
 use crate::base::date::Date;
 
-const DATE_FORMAT: &[time::format_description::FormatItem<'static>] =
+pub const DATE_FORMAT: &[time::format_description::FormatItem<'static>] =
     time::macros::format_description!("[year]-[month]-[day]");
 
 pub struct DatabaseManager {
     conn: Connection,
 }
 impl DatabaseManager {
+    pub fn transaction(&mut self) ->  rusqlite::Result<Transaction<'_>> {
+        self.conn.transaction()
+    }
+    pub fn connection(&self) -> &Connection {
+        &self.conn
+    }
     pub fn from_path(path: &std::path::Path) -> Result<Self, rusqlite::Error> {
         let conn = rusqlite::Connection::open(path)?;
-        Ok(DatabaseManager { conn })
+        Self::try_from(conn)
     }
     pub fn remove_day(&self, date: Date) -> Result<usize, rusqlite::Error> {
         self.conn.execute("DELETE FROM day WHERE date=?",
@@ -25,6 +31,15 @@ impl DatabaseManager {
         res.collect()
 
     }
+    /*
+    pub fn read_from_to(&self, from: Date, to: Date) -> Result<Vec<Day>, rusqlite::Error> {
+        let mut stmt = self.conn.prepare("SELECT date,event,weather,mood FROM day WHERE date BETWEEN ?1 AND ?2")?;
+        let res = stmt.query_map([from.date().format(DATE_FORMAT).unwrap(), to.date().format(DATE_FORMAT).unwrap()], |row| {
+            row_to_day(row)
+        })?;
+        res.collect()
+    }
+     */
     pub fn read_day(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
         let r = self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
         params![date.date().format(DATE_FORMAT).unwrap()], |row|

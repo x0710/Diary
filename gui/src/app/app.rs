@@ -36,11 +36,22 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             MenuBar::new() .ui(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    ui.separator();
+                    if ui.button("Export").clicked() {
+                        if let Some(folder) = rfd::FileDialog::new().pick_folder() {
+
+                        }else {
+                            eprintln!("Please select a folder");
+                        }
+                    }
+                });
+                ui.menu_button("Settings", |ui| {});
                 ui.menu_button("Help", |ui| {
                     if ui.button("About Diary").clicked() {
                         self.in_about_page = true;
                     }
-                })
+                });
             })
         });
         SidePanel::left("side_panel").resizable(false)
@@ -77,11 +88,6 @@ impl eframe::App for App {
                     let face_rec = ui.allocate_exact_size([65., 15.].into(), Sense::empty());
                     ui.put(face_rec.0, face)
                 });
-                /*
-                if ui.button("ERROR").clicked() {
-                    self.error = Some(Error::UnknownCommand("Error-Test".to_string()));
-                }
-                 */
                 ui.horizontal_wrapped(|ui| {
                     if ui.add(Button::new("Before")).clicked() {
                         self.date_selected -= Duration::days(1);
@@ -141,10 +147,8 @@ impl App {
             .anchor(Align2::CENTER_CENTER, [0.0, 0.0])
             .show(ctx, |ui| {
                 ui.vertical(|ui| {
-                    // --- 第一行：标题 + 右对齐图标 ---
                     ui.horizontal(|ui| {
                         ui.heading("Diary");
-                        // 靠右对齐的图标区域
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             let cur_rec = ui.available_rect_before_wrap();
                             let github_icon = Image::new(include_image!("../../assets/github-mark-white.svg"));

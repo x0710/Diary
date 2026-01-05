@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct Event {
@@ -18,11 +17,9 @@ impl Display for Event {
         write!(f, "{}", self.instruct)
     }
 }
-impl FromStr for Event {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Event::new(s))
+impl From<&str> for Event {
+    fn from(s: &str) -> Self {
+        Event::new(s)
     }
 }
 impl Default for Event {

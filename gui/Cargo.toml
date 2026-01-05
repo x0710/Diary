@@ -9,3 +9,4 @@ eframe = "0.33.3"
 egui_extras = { version = "0.33.3", features = ["datepicker", "svg", "image"] }
 directories = "6.0.0"
 diary-core = { path = "../core" }
+rfd = "0.16.0"

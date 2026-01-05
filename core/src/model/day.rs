@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use crate::model::event::Event;
 use crate::base::date::Date;
+use crate::storage::io::record::Record;
 
 #[derive(Debug, Clone)]
 pub struct Day {
@@ -23,6 +24,14 @@ impl Day {
             mood,
         }
     }
+    pub fn into_record(self) -> Record {
+        Record {
+            date: self.date.date().to_string(),
+            event: self.event.instruct,
+            weather: self.weather,
+            mood: self.mood,
+        }
+    }
     pub fn from_event(event: &Event) -> Self {
         Self {
             event: event.clone(),
@@ -31,7 +40,7 @@ impl Day {
     }
     pub fn from_date(date: Date) -> Self {
         Self {
-            date: date,
+            date,
             ..Self::default()
         }
     }
