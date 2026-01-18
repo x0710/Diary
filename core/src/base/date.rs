@@ -23,7 +23,8 @@ impl FromStr for Date {
 
     fn from_str(source: &str) -> Result<Self, Self::Err> {
         let source = source.trim();
-        let today = time::OffsetDateTime::now_utc().date();
+        let today = time::OffsetDateTime::now_local()
+            .unwrap_or(time::OffsetDateTime::now_utc()).date();
 
         let d = match source {
             "yesterday" | "y" => today.previous_day()
