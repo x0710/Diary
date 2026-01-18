@@ -2,6 +2,7 @@ use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::process::ExitStatus;
 use clap::Parser;
+use rustyline::{Config, DefaultEditor};
 use rustyline::error::ReadlineError;
 use diary_core::base::executor::Executor;
 use diary_core::storage::db_mgr::DatabaseManager;
@@ -15,7 +16,7 @@ pub struct CliSession {
     executor: CliExecutor,
 }
 impl CliSession {
-    pub fn new(conn: rusqlite::Connection) -> Self {
+    pub fn new(conn: rusqlite::Connection, ) -> Self {
         let args = Args::parse();
         let exec = DatabaseManager::try_from(conn)
             .unwrap();
@@ -33,8 +34,9 @@ impl CliSession {
         unimplemented!()
     }
     fn interactive(&self) {
-        use rustyline::DefaultEditor;
-        let mut rl = DefaultEditor::new().unwrap();
+        // History Enable
+        let s = Config::builder().auto_add_history(true).build();
+        let mut rl = DefaultEditor::with_config(s).unwrap();
         loop {
             match rl.readline(">: ") {
                 Ok(line) => {
@@ -70,13 +72,13 @@ pub fn edit_with_editor(s: &str) -> Result<String, CliError> {
     editor.read_to_string(&mut res)?;
     Ok(res)
 }
-pub fn edit_file(file: &Path) -> std::io::Result<ExitStatus> {
+pub fn edit_file(file: impl AsRef<Path>) -> std::io::Result<ExitStatus> {
     std::process::Command::new(args::editor())
-        .arg(file)
+        .arg(file.as_ref())
         .status()
 }
-pub fn cat_file(file: &Path) -> std::io::Result<ExitStatus> {
+pub fn cat_file(file: impl AsRef<Path>) -> std::io::Result<ExitStatus> {
     std::process::Command::new("cat")
-        .arg(file)
+        .arg(file.as_ref())
         .status()
 }
