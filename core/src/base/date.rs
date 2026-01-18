@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use time::format_description::BorrowedFormatItem;
-use time::Month;
+use time::{Duration, Month};
 use crate::base::error::Error;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -33,6 +33,9 @@ impl FromStr for Date {
                 .ok_or_else(|| Error::InvalidDate("It's too large".to_string())),
             "today" | "t" => Ok(today),
             _ => {
+                if let Ok(dx) = source.parse() {
+                    return Ok((today.saturating_add(Duration::days(dx))).into())
+                }
                 time::Date::parse(source, &DATE_FORMAT1)
                     .or_else(|_| time::Date::parse(source, &DATE_FORMAT2))
                     .map_err(|_| Error::InvalidDate(source.to_string()))
