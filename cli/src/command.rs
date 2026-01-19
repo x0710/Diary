@@ -24,7 +24,11 @@ impl CliCommand {
             CliCommand::Quit => Err(CliError::Quit),
         }
     }
+    fn handle_version(&self) {
+        println!("version: {}", env!("CARGO_PKG_VERSION"));
+    }
     fn handle_help(&self) {
+        self.handle_version();
         println!(r#"
 Available commands:
   add <date>    - Add or edit an entry (e.g., add today, add 20251225, add 2025-12-25)
