@@ -8,3 +8,4 @@ rusqlite = { version = "0.38.0", features = ["bundled"] }
 time = { version = "0.3.44", features = ["formatting", "parsing", "macros", "local-offset"] }
 serde = { version = "1.0.228", features = ["derive"] }
 csv = "1.4.0"
+serde_json = "1.0.149"
