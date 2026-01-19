@@ -1,3 +1,4 @@
+use std::fs::File;
 use std::path::Path;
 use rusqlite::params;
 use crate::base::error::Error;
@@ -13,18 +14,26 @@ impl<'a> Importer<'a> {
     pub fn new(db_mgr: &'a mut DatabaseManager) -> Self {
         Importer { db_mgr, }
     }
-    pub fn read_from_file<P: AsRef<Path>>(&self, path: P, format: Format) -> Result<(Vec<Day>, Vec<csv::Error>), Error> {
+    pub fn read_from_file<P: AsRef<Path>>(&self, path: P, format: Format) -> Result<(Vec<Day>, Vec<String>), Error> {
         let mut days = Vec::new();
         let mut errors = Vec::new();
         match format {
-            Format::JSON => {}
+            Format::JSON => {
+                let res = serde_json::from_reader::<_, Vec<Record>>(File::open(&path)?);
+                if let Ok(r) = res {
+                    days.extend(r.into_iter().map(|x| x.try_into().unwrap()));
+                }else {
+                    errors.push(res.unwrap_err().to_string());
+                }
+
+            }
             Format::CSV => {
                 let mut csv_reader = csv::Reader::from_path(path)?;
                 for r in csv_reader.deserialize::<Record>() {
                     if let Ok(record) = r {
                         days.push(record.try_into()?);
                     }else {
-                        errors.push(r.unwrap_err());
+                        errors.push(r.unwrap_err().to_string());
                     }
                 }
 
@@ -74,6 +83,6 @@ fn read_from_csv() {
     let db_path = Path::new("/tmp/tmp.db");
     let mut db_mgr = DatabaseManager::from_path(db_path).unwrap();
     let mut importer = Importer::new(&mut db_mgr);
-    let date = importer.read_from_file("/tmp/test.csv", Format::CSV).unwrap();
+    let date = importer.read_from_file("/tmp/test.json", Format::JSON).unwrap();
     importer.import_to_db(date.0, DuplicateStrategy::Fail).unwrap();
 }

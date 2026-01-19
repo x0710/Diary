@@ -53,6 +53,15 @@ impl<'a> Exporter<'a> {
 #[test]
 fn write_to_csv() {
     let db_mgr = DatabaseManager::from_path(Path::new("/home/x0710/.local/share/diary/diary.db")).unwrap();
+    let out = PathBuf::from("/tmp/test.csv");
+    let mut e = Exporter::new(&db_mgr, out.into_boxed_path(), Format::CSV);
+    // e.from_to(Date::new(2020, 1, 1).unwrap(), Date::new(2025, 12, 12).unwrap()).unwrap();
+
+    e.all_export().unwrap();
+}
+#[test]
+fn write_to_json() {
+    let db_mgr = DatabaseManager::from_path(Path::new("/home/x0710/.local/share/diary/diary.db")).unwrap();
     let out = PathBuf::from("/tmp/test.json");
     let mut e = Exporter::new(&db_mgr, out.into_boxed_path(), Format::JSON);
     // e.from_to(Date::new(2020, 1, 1).unwrap(), Date::new(2025, 12, 12).unwrap()).unwrap();
