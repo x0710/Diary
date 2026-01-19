@@ -3,7 +3,9 @@ use crate::model::day::Day;
 use crate::model::event::Event;
 use crate::base::date::Date;
 
-pub const DATE_FORMAT: &[time::format_description::FormatItem<'static>] =
+pub const DATE_FORMAT1: &[time::format_description::FormatItem<'static>] =
+    time::macros::format_description!("[year][month][day]");
+pub const DATE_FORMAT2: &[time::format_description::FormatItem<'static>] =
     time::macros::format_description!("[year]-[month]-[day]");
 
 pub struct DatabaseManager {
@@ -22,7 +24,7 @@ impl DatabaseManager {
     }
     pub fn remove_day(&self, date: Date) -> Result<usize, rusqlite::Error> {
         self.conn.execute("DELETE FROM day WHERE date=?",
-        [date.date().format(DATE_FORMAT).unwrap()])
+        [date.date().format(DATE_FORMAT1).unwrap()])
     }
     pub fn read_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
         let mut stmt = self.conn.prepare("SELECT date, event, weather, mood FROM day ORDER BY date ASC")?;
@@ -42,7 +44,7 @@ impl DatabaseManager {
      */
     pub fn read_day(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
         let r = self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
-        params![date.date().format(DATE_FORMAT).unwrap()], |row|
+                                    params![date.date().format(DATE_FORMAT1).unwrap()], |row|
             row_to_day(row)
         );
         match r {
@@ -54,7 +56,7 @@ impl DatabaseManager {
     pub fn add_day(&self, day: &Day) -> Result<usize, rusqlite::Error> {
         let res = self.conn.execute(
             "INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
-            (day.date().date().format(DATE_FORMAT).unwrap(),
+            (day.date().date().format(DATE_FORMAT1).unwrap(),
              day.event().instruct.to_string(),
              day.weather(),
              day.mood()),
@@ -80,7 +82,12 @@ impl TryFrom<Connection> for DatabaseManager {
 fn row_to_day(row: &rusqlite::Row) -> Result<Day, rusqlite::Error> {
     // raw_datum
     let date_raw: String = row.get(0)?;
-    let date = time::Date::parse(&date_raw, DATE_FORMAT).unwrap();
+    let date =
+    if let Ok(d) = time::Date::parse(&date_raw, DATE_FORMAT1) {
+        d
+    }else {
+        time::Date::parse(&date_raw, DATE_FORMAT2).unwrap()
+    };
     let event_str: String = row.get(1)?;
     let weather = row.get(2)?;
     let mood = row.get(3)?;
