@@ -1,5 +1,4 @@
-use std::fmt::{write, Display, Formatter};
-use std::io;
+use std::fmt::Display;
 use time::error::Parse;
 
 #[derive(Debug)]
