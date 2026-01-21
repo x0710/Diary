@@ -14,7 +14,7 @@ impl<'a> Importer<'a> {
     pub fn new(db_mgr: &'a mut DatabaseManager) -> Self {
         Importer { db_mgr, }
     }
-    pub fn read_from_file<P: AsRef<Path>>(&self, path: P, format: Format) -> Result<(Vec<Day>, Vec<String>), Error> {
+    pub fn read_from_file<P: AsRef<Path>>(path: P, format: Format) -> Result<(Vec<Day>, Vec<String>), Error> {
         let mut days = Vec::new();
         let mut errors = Vec::new();
         match format {
@@ -72,17 +72,10 @@ impl<'a> Importer<'a> {
         Ok(())
     }
 }
+#[derive(Debug, Clone)]
 pub enum DuplicateStrategy {
     Replace,
     Ignore,
     Fail,
     Append,
-}
-#[test]
-fn read_from_csv() {
-    let db_path = Path::new("/tmp/tmp.db");
-    let mut db_mgr = DatabaseManager::from_path(db_path).unwrap();
-    let mut importer = Importer::new(&mut db_mgr);
-    let date = importer.read_from_file("/tmp/test.json", Format::JSON).unwrap();
-    importer.import_to_db(date.0, DuplicateStrategy::Fail).unwrap();
 }

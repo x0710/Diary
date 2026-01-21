@@ -5,7 +5,7 @@ use crate::error::CliError;
 use crate::terminal::edit_with_editor;
 
 pub struct CliExecutor {
-    exec: Executor,
+    pub(crate) exec: Executor,
 }
 impl CliExecutor {
     pub fn exec_command(&self, comm: &str) -> Result<(), CliError> {

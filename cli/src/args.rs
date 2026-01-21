@@ -1,25 +1,21 @@
+use clap::Subcommand;
+
 const DEFAULT_EDITOR: &str = "vi";
 #[derive(clap::Parser, Debug, Clone)]
+#[command(version, about, long_about = None)]
 pub struct Args {
-    /// Diary for special date
-    #[clap(short, long)]
-    pub time: Option<String>,
-
-    /// What happened on that day
-    #[clap(short, long)]
-    pub event: Option<String>,
-
-    /// Delete the day had logged
-    #[clap(short, long)]
-    pub remove: bool,
-
-    /// Delete All the Diaries
-    #[clap(long)]
-    pub clear: bool,
-
-    /// Interactive Mode
-    #[clap(short, long)]
-    pub interactive: bool,
+    #[clap(subcommand)]
+    pub command: Option<Commands>,
+}
+#[derive(Subcommand, Debug, Clone)]
+pub enum Commands {
+    Interactive,
+    Import {
+        path: String,
+    },
+    Export {
+        path: String,
+    },
 }
 #[cfg(target_os = "linux")]
 pub fn editor() -> String {

@@ -42,6 +42,9 @@ impl Executor {
     pub fn conn(&self) -> &DatabaseManager {
         &self.conn
     }
+    pub fn conn_mut(&mut self) -> &mut DatabaseManager {
+        &mut self.conn
+    }
 }
 impl From<DatabaseManager> for Executor {
     fn from(conn: DatabaseManager) -> Self {

@@ -6,20 +6,24 @@ use rustyline::{Config, DefaultEditor};
 use rustyline::error::ReadlineError;
 use diary_core::base::executor::Executor;
 use diary_core::storage::db_mgr::DatabaseManager;
+use diary_core::storage::io::export::Exporter;
+use diary_core::storage::io::import::DuplicateStrategy::Replace;
+use diary_core::storage::io::import::Importer;
+use diary_core::storage::io::mode::Format::JSON;
 use crate::args;
-use crate::args::Args;
+use crate::args::{Args, Commands};
 use crate::error::CliError;
 use crate::executor::CliExecutor;
 
 pub struct CliSession {
     pub args: Args,
-    executor: CliExecutor,
+    pub(crate) executor: CliExecutor,
 }
 impl CliSession {
     pub fn new(conn: rusqlite::Connection, ) -> Self {
         let args = Args::parse();
         let exec = DatabaseManager::try_from(conn)
-            .unwrap();
+            .expect("Error when open database");
         let exec = Executor::from(exec);
         let exec = CliExecutor::from(exec);
         Self {
@@ -27,11 +31,38 @@ impl CliSession {
             executor: exec,
         }
     }
-    pub fn run(&self) {
-        self.interactive()
+    pub fn run(&mut self) {
+        if let Some(c) = self.args.command.clone() {
+            self.once(c);
+        }else {
+            self.interactive();
+        }
+        
     }
-    fn once(&self) {
-        unimplemented!()
+    fn once(&mut self, command: Commands) {
+        match command {
+            Commands::Interactive => self.interactive(),
+            Commands::Import {path} => {
+                let mut imp = Importer::new(self.executor.exec.conn_mut());
+                let data = Importer::read_from_file(path, JSON)
+                    .expect("Error when read file");
+                if !data.1.is_empty() {
+                    for i in data.1 {
+                        eprintln!("Import Fail at {}", i);
+                    }
+                }
+                imp.import_to_db(data.0, Replace)
+                    .expect("Error when import to database");
+            }
+            Commands::Export {path} => {
+                let mut exp = Exporter::new(self.executor.exec.conn_mut(),
+                                        path,
+                                        JSON);
+                exp.all_export()
+                    .expect("Error when export all data");
+
+            }
+        }
     }
     fn interactive(&self) {
         // History Enable

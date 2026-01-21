@@ -9,10 +9,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .expect("Could not find a valid home directory");
     let data_dir = prjdir.data_dir();
     std::fs::create_dir_all(&data_dir).unwrap();
+    
     let db_path = data_dir.join(DB_NAME);
     let db = Connection::open(db_path)?;
 
-    let cli = CliSession::new(db);
+    let mut cli = CliSession::new(db);
     cli.run();
 
     Ok(())
