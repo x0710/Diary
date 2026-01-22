@@ -4,7 +4,7 @@ use diary_core::base::error::Error;
 use crate::model::day::GuiDayState;
 
 pub struct GuiService {
-    executor: Executor,
+    pub(crate) executor: Executor,
 }
 
 impl GuiService {

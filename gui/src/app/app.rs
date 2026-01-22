@@ -5,6 +5,9 @@ use eframe::Frame;
 use egui_extras::DatePickerButton;
 use diary_core::base::error::Error;
 use diary_core::model::day::Day;
+use diary_core::storage::io::export::Exporter;
+use diary_core::storage::io::import::{DuplicateStrategy, Importer};
+use diary_core::storage::io::mode::Format::JSON;
 use crate::service::executor::GuiService;
 use crate::model::date::Date;
 use crate::model::day::GuiDayState;
@@ -39,10 +42,27 @@ impl eframe::App for App {
                 ui.menu_button("File", |ui| {
                     ui.separator();
                     if ui.button("Export").clicked() {
-                        if let Some(folder) = rfd::FileDialog::new().pick_folder() {
-
+                        if let Some(folder) = rfd::FileDialog::new().save_file() {
+                            let mut exp = Exporter::new(self.executor.executor.conn_mut(), folder, JSON);
+                            self.error = exp.all_export().err();
                         }else {
                             eprintln!("Please select a folder");
+                        }
+                    }
+                    if ui.button("Import").clicked() {
+                        if let Some(file) = rfd::FileDialog::new().pick_file() {
+                            let mut imp = Importer::new(self.executor.executor.conn_mut());
+                            match Importer::read_from_file(file, JSON) {
+                                Ok(r) => {
+                                    let mut ers = String::new();
+                                    r.1.iter().for_each(|x| ers.push_str(x));
+                                    if !ers.is_empty() {
+                                        self.error = Some(Error::InvalidDate(ers.into()));
+                                    }
+                                    self.error = imp.import_to_db(r.0, DuplicateStrategy::Replace).err();
+                                }
+                                Err(err) => self.error = Some(err),
+                            }
                         }
                     }
                 });

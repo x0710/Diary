@@ -21,7 +21,9 @@ impl<'a> Importer<'a> {
             Format::JSON => {
                 let res = serde_json::from_reader::<_, Vec<Record>>(File::open(&path)?);
                 if let Ok(r) = res {
-                    days.extend(r.into_iter().map(|x| x.try_into().unwrap()));
+                    for i in r {
+                        days.push(i.try_into()?);
+                    }
                 }else {
                     errors.push(res.unwrap_err().to_string());
                 }

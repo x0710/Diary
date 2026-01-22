@@ -16,8 +16,8 @@ impl Date {
         Ok(Date { date: d })
     }
 }
-const DATE_FORMAT1: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year]-[month]-[day]");
-const DATE_FORMAT2: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year][month][day]");
+pub const DATE_FORMAT1: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year][month][day]");
+pub const DATE_FORMAT2: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year]-[month]-[day]");
 impl FromStr for Date {
     type Err = Error;
 

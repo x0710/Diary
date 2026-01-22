@@ -2,11 +2,7 @@ use rusqlite::{params, Connection, Transaction};
 use crate::model::day::Day;
 use crate::model::event::Event;
 use crate::base::date::Date;
-
-pub const DATE_FORMAT1: &[time::format_description::FormatItem<'static>] =
-    time::macros::format_description!("[year][month][day]");
-pub const DATE_FORMAT2: &[time::format_description::FormatItem<'static>] =
-    time::macros::format_description!("[year]-[month]-[day]");
+use crate::base::date::DATE_FORMAT1;
 
 pub struct DatabaseManager {
     conn: Connection,
@@ -19,7 +15,7 @@ impl DatabaseManager {
         &self.conn
     }
     pub fn from_path(path: &std::path::Path) -> Result<Self, rusqlite::Error> {
-        let conn = rusqlite::Connection::open(path)?;
+        let conn = Connection::open(path)?;
         Self::try_from(conn)
     }
     pub fn remove_day(&self, date: Date) -> Result<usize, rusqlite::Error> {
@@ -33,15 +29,13 @@ impl DatabaseManager {
         res.collect()
 
     }
-    /*
     pub fn read_from_to(&self, from: Date, to: Date) -> Result<Vec<Day>, rusqlite::Error> {
         let mut stmt = self.conn.prepare("SELECT date,event,weather,mood FROM day WHERE date BETWEEN ?1 AND ?2")?;
-        let res = stmt.query_map([from.date().format(DATE_FORMAT).unwrap(), to.date().format(DATE_FORMAT).unwrap()], |row| {
+        let res = stmt.query_map([from.date().format(DATE_FORMAT1).unwrap(), to.date().format(DATE_FORMAT1).unwrap()], |row| {
             row_to_day(row)
         })?;
         res.collect()
     }
-     */
     pub fn read_day(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
         let r = self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
                                     params![date.date().format(DATE_FORMAT1).unwrap()], |row|
@@ -82,12 +76,7 @@ impl TryFrom<Connection> for DatabaseManager {
 fn row_to_day(row: &rusqlite::Row) -> Result<Day, rusqlite::Error> {
     // raw_datum
     let date_raw: String = row.get(0)?;
-    let date =
-    if let Ok(d) = time::Date::parse(&date_raw, DATE_FORMAT1) {
-        d
-    }else {
-        time::Date::parse(&date_raw, DATE_FORMAT2).unwrap()
-    };
+    let date = time::Date::parse(&date_raw, DATE_FORMAT1).unwrap();
     let event_str: String = row.get(1)?;
     let weather = row.get(2)?;
     let mood = row.get(3)?;
