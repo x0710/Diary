@@ -25,16 +25,38 @@ impl FromStr for Date {
         let source = source.trim();
         let today = time::OffsetDateTime::now_local()
             .unwrap_or(time::OffsetDateTime::now_utc()).date();
+        if source.is_empty() || !source.is_ascii() {
+            return Ok(today.into());
+        }
 
         let d = match source {
-            "yesterday" | "y" => today.previous_day()
+            "yesterday" | "y" | "yes" => today.previous_day()
                 .ok_or_else(|| Error::InvalidDate("It's too small".to_string())),
-            "tomorrow" | "m" => today.next_day()
+            "tomorrow" | "tom" => today.next_day()
                 .ok_or_else(|| Error::InvalidDate("It's too large".to_string())),
             "today" | "t" => Ok(today),
             _ => {
                 if let Ok(dx) = source.parse() {
-                    return Ok((today.saturating_add(Duration::days(dx))).into())
+                    return Ok(today.saturating_add(Duration::days(dx)).into())
+                }
+                // Regard value input as day when prefix is "m"
+                if let Some(dxs) = source.strip_prefix("m") {
+                    if let Ok(dx) = dxs.parse() {
+                        if let Ok(d) = today.replace_day(dx) {
+                            return Ok(Self { date: d });
+                        }
+                    }
+                }
+                // Regard value input as day when prefix is "ye"
+                if let Some(dxs) = source.strip_prefix("ye") {
+                    if dxs.len() == 4 {
+                        let month = Month::try_from((dxs.as_bytes()[0]-b'0')*10+dxs.as_bytes()[1]-b'0');
+                        let day = (dxs.as_bytes()[2]-b'0')*10+dxs.as_bytes()[3]-b'0';
+
+                        if let Ok(m) = month && let Ok(d) = time::Date::from_calendar_date(today.year(), m, day) {
+                            return Ok(Self { date: d });
+                        }
+                    }
                 }
                 time::Date::parse(source, &DATE_FORMAT1)
                     .or_else(|_| time::Date::parse(source, &DATE_FORMAT2))

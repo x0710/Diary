@@ -65,16 +65,17 @@ diary
 ### Add an entry
 
 ```bash
->: add 2025-01-01 "What happened today"
+>: add 20250101 "What happened today"
 ```
 
 Supported date formats:
 
-* `YYYY-MM-DD`
-* `YYYYMMDD`
-* `today` / `t`
-* `tomorrow` / `m`
-* `yesterday` / `y`
+* 16th of this month: `m16`
+* March 27 of this year: `ye0327`
+* today: `today` / `t`
+* tomorrow: `tomorrow` / `tom`
+* yesterday: `yesterday` / `yes` / `y`
+* specific date: `YYYYMMDD` / ~~`YYYY-MM-DD`~~
 
 ### Read an entry
 
@@ -101,9 +102,9 @@ Supported date formats:
 ## Roadmap
 
 * [ ] Full-text search
-* [ ] Configurable editor support
-* [ ] Import / export
-* [ ] GUI
+* [x] Configurable editor support (CLI)
+* [x] Import / export (Only support for JSON now)
+* [x] GUI
 * [ ] Visualization / charts?
 
 ---
