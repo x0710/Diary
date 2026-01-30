@@ -121,9 +121,13 @@ impl eframe::App for App {
             });
         CentralPanel::default().show(ctx, |ui| {
             ui.centered_and_justified(|ui| {
-                if ui.text_edit_multiline(&mut self.day.event.instruct).changed() {
-                    // When input text, what happen?
-                }
+                ScrollArea::both()
+                    .auto_shrink([true; 2])
+                    .show(ui, |ui| {
+                    if ui.text_edit_multiline(&mut self.day.event.instruct).changed() {
+                        // When input text, what happen?
+                    }
+                })
             });
         });
         self.may_modal(ctx);
