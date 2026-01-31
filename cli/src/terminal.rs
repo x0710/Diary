@@ -1,3 +1,4 @@
+use std::ffi::OsStr;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::process::ExitStatus;
@@ -90,8 +91,11 @@ impl CliSession {
         }
     }
 }
-pub fn edit_with_editor(s: &str) -> Result<String, CliError> {
-    let mut editor = tempfile::NamedTempFile::new()?;
+pub fn edit_with_editor(s: &str, date: impl AsRef<OsStr>) -> Result<String, CliError> {
+    let mut editor = tempfile::Builder::default()
+        .suffix(date.as_ref())
+        .prefix("Luck-for-you:>")
+        .tempfile()?;
     editor.write_all(s.as_bytes())?;
     editor.flush()?;
     editor.seek(SeekFrom::Start(0))?;

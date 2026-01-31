@@ -17,7 +17,7 @@ impl CliExecutor {
                     .map(|t| t.event().instruct.clone())
                     .unwrap_or_default()
             };
-            let s = edit_with_editor(&s);
+            let s = edit_with_editor(&s, date.date().to_string());
             *ctx = Some(s?);
         }
         let res = command.exec(&self.exec)?;
