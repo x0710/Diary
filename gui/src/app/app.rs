@@ -177,7 +177,7 @@ impl App {
                         ui.heading("Diary");
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             let cur_rec = ui.available_rect_before_wrap();
-                            let github_icon = Image::new(include_image!("../../assets/github-mark-white.svg"));
+                            let github_icon = Image::new(include_image!("../../assets/github-mark.svg"));
                             let icon_rec = Rect::from_min_size(
                                 [cur_rec.right()-55., cur_rec.top()+10.].into(),
                                 [50., 50.].into(),

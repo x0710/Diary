@@ -1,13 +1,16 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod app;
+mod service;
+mod model;
 use std::sync::Arc;
 use eframe::{run_native, NativeOptions};
 use eframe::egui::{FontData, FontDefinitions, IconData, ViewportBuilder, Visuals};
 use eframe::epaint::FontFamily;
 use diary_core::base::executor::Executor;
 use diary_core::storage::db_mgr::DatabaseManager;
-use diary_gui::app::app::App;
-use diary_gui::service::executor::GuiService;
+use crate::app::app::App;
+use crate::service::executor::GuiService;
 
-#[cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 fn main() -> eframe::Result {// 16x16 图标
     let prjdir = directories::ProjectDirs::from("x0710", "x0710", "diary")
         .expect("Could not find a valid home directory");
