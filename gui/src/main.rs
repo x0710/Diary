@@ -12,7 +12,13 @@ fn main() -> eframe::Result {// 16x16 图标
     let prjdir = directories::ProjectDirs::from("x0710", "x0710", "diary")
         .expect("Could not find a valid home directory");
     let db_path = prjdir.data_dir().join("diary.db");
-    let exec = Executor::from( DatabaseManager::from_path(&db_path)
+    std::fs::create_dir_all(prjdir.data_dir())
+        .expect("Could not create data directory");
+    if !db_path.exists() {
+        std::fs::File::create(&db_path)
+            .expect("Could not create database file");
+    }
+    let exec = Executor::from(DatabaseManager::from_path(&db_path)
         .expect("Could not load the database"));
     let exec = GuiService::new(exec);
     const WIDTH: u32 = 16;
