@@ -44,9 +44,20 @@ impl eframe::App for App {
                 ui.menu_button("File", |ui| {
                     ui.separator();
                     if ui.button("Export").clicked() {
-                        if let Some(folder) = rfd::FileDialog::new().save_file() {
-                            let mut exp = Exporter::new(self.executor.executor.conn_mut(), folder, JSON);
-                            self.error = exp.all_export().err();
+                        let f = rfd::FileDialog::default()
+                            .set_file_name(chrono::Local::now().format("%Y-%m-%d").to_string())
+                            .add_filter("JSON", &["json"])
+                            .add_filter("CSV", &["csv"])
+                            .add_filter("Sqlite3 DataBase File", &["db"])
+                            .save_file();
+                        if let Some(file) = f {
+                            // 根据保存文件后缀判断使用格式
+                            let format = file.extension().unwrap().to_str().unwrap().to_ascii_lowercase().as_str()
+                                .parse();
+                            if let Ok(format) = format {
+                                let mut exp = Exporter::new(self.executor.executor.conn_mut(), file, format);
+                                self.error = exp.all_export().err();
+                            }
                         }else {
                             eprintln!("Please select a folder");
                         }
