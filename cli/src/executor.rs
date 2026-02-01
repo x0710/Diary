@@ -17,7 +17,8 @@ impl CliExecutor {
                     .map(|t| t.event().instruct.clone())
                     .unwrap_or_default()
             };
-            let s = edit_with_editor(&s, date.date().to_string());
+            let subfix = format!("{}-{}-{} {}", date.date().year(), date.date().month(), date.date().day(), date.date().weekday());
+            let s = edit_with_editor(&s, subfix);
             *ctx = Some(s?);
         }
         let res = command.exec(&self.exec)?;
