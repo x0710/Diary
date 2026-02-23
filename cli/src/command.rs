@@ -31,11 +31,12 @@ impl CliCommand {
         self.handle_version();
         println!(r#"
 Available commands:
-  add <date>    - Add or edit an entry (e.g., add today, add 20251225, add ye1225, add m25)
-  remove <date> - Delete an entry
-  check <date>  - View a specific entry
-  list          - List all entries
-  quit/exit     - Close the application
+  add <date> [context]  - Add or edit an entry with context appened at the last
+        (e.g., add today, add 20251225, add ye1225, add m25)
+  remove <date>         - Delete an entry
+  check <date>          - View a specific entry
+  list                  - List all entries
+  quit/exit             - Close the application
 "#);
     }
 }
