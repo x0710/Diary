@@ -22,14 +22,22 @@ impl Date {
         let d = time::Date::from_calendar_date(year, Month::try_from(month)?, day)?;
         Ok(Date { date: d })
     }
+
+    /// 以本地日期构造`Date`
+    fn native_time() -> Self {
+        let cur = time::OffsetDateTime::now_local()
+            .unwrap_or(time::OffsetDateTime::now_utc());
+        Self {
+            date: cur.date(),
+        }
+    }
 }
 impl FromStr for Date {
     type Err = Error;
 
     fn from_str(source: &str) -> Result<Self, Self::Err> {
         let source = source.trim();
-        let today = time::OffsetDateTime::now_local()
-            .unwrap_or(time::OffsetDateTime::now_utc()).date();
+        let today = Self::native_time().date;
         if source.is_empty() || !source.is_ascii() {
             return Ok(today.into());
         }
@@ -79,11 +87,7 @@ impl From<time::Date> for Date {
 impl Default for Date {
     /// 通过系统日期实例化日期
     fn default() -> Self {
-        let cur = time::OffsetDateTime::now_local()
-            .unwrap_or(time::OffsetDateTime::now_utc());
-        Self {
-            date: cur.date(),
-        }
+        Self::native_time()
     }
 }
 impl Deref for Date {

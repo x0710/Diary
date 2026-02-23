@@ -40,9 +40,13 @@ impl FromStr for SubCommand {
 impl FromStr for Command {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut args = s.splitn(3, ' ');
+        // 以命令`>: ad 0 ctx`为例，
+        let mut args = s.split_whitespace();
+        // `SubCommand::Add`
         let sub = args.next().unwrap_or_default().parse::<SubCommand>()?;
+        // today
         let date = args.next().unwrap_or_default();
+        // Some("ctx")
         let ctx = args.next();
 
         match sub {

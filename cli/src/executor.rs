@@ -11,14 +11,17 @@ impl CliExecutor {
     pub fn exec_command(&self, comm: &str) -> Result<(), CliError> {
         let mut command = comm.parse::<CliCommand>()?;
         if let CliCommand::Command(Command::Add(date, ctx)) = &mut command {
-            let s = match ctx.as_deref() {
-                Some(ctx) => ctx.to_string(),
-                None => self.exec.conn().read_day(*date)?
-                    .map(|t| t.event().instruct.clone())
-                    .unwrap_or_default()
-            };
+            // 使用add命令时，查询当天已经写过的数据
+            let mut day_data = self.exec.conn().read_day(*date)?
+                .map(|t| t.event().instruct.clone())
+                .unwrap_or_default();
+            // 如果在命令行中写了其它内容，追加到之前日记的后面
+            if let Some(ctx) = ctx.as_deref() {
+                day_data.push('\n');
+                day_data.push_str(ctx);
+            }
             let subfix = format!("{}-{}-{} {}", date.year(), date.month(), date.day(), date.weekday());
-            let s = edit_with_editor(&s, subfix);
+            let s = edit_with_editor(&day_data, subfix);
             *ctx = Some(s?);
         }
         let res = command.exec(&self.exec)?;
