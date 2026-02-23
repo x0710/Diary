@@ -70,7 +70,7 @@ impl eframe::App for App {
                                     let mut ers = String::new();
                                     r.1.iter().for_each(|x| ers.push_str(x));
                                     if !ers.is_empty() {
-                                        self.error = Some(Error::InvalidDate(ers.into()));
+                                        self.error = Some(Error::InvalidData(ers.into()));
                                     }
                                     self.error = imp.import_to_db(r.0, DuplicateStrategy::Replace).err();
                                 }

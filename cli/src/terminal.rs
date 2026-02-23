@@ -21,11 +21,9 @@ pub struct CliSession {
     pub(crate) executor: CliExecutor,
 }
 impl CliSession {
-    pub fn new(conn: rusqlite::Connection, ) -> Self {
+    pub fn new(db_mgr: DatabaseManager) -> Self {
         let args = Args::parse();
-        let exec = DatabaseManager::try_from(conn)
-            .expect("Error when open database");
-        let exec = Executor::from(exec);
+        let exec = Executor::from(db_mgr);
         let exec = CliExecutor::from(exec);
         Self {
             args,

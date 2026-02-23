@@ -44,9 +44,9 @@ impl FromStr for Date {
 
         let d = match source {
             "yesterday" | "y" | "yes" => today.previous_day()
-                .ok_or_else(|| Error::InvalidDate("It's too small".to_string())),
+                .ok_or_else(|| Error::InvalidData("It's too small".to_string())),
             "tomorrow" | "tom" => today.next_day()
-                .ok_or_else(|| Error::InvalidDate("It's too large".to_string())),
+                .ok_or_else(|| Error::InvalidData("It's too large".to_string())),
             "today" | "t" => Ok(today),
             _ => {
                 if let Ok(dx) = source.parse() {
@@ -73,7 +73,7 @@ impl FromStr for Date {
                 }
                 time::Date::parse(source, &DATE_FORMAT1)
                     .or_else(|_| time::Date::parse(source, &DATE_FORMAT2))
-                    .map_err(|_| Error::InvalidDate(source.to_string()))
+                    .map_err(|_| Error::InvalidData(source.to_string()))
             }
         }?;
         Ok(d.into())

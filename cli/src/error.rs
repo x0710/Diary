@@ -1,7 +1,7 @@
 use diary_core::base::error::Error;
 
 pub enum CliError {
-    Error(Error),
+    CoreError(Error),
     UnknownCommand(String),
     InvalidArgs(String),
     Io(std::io::Error),
@@ -9,7 +9,7 @@ pub enum CliError {
 }
 impl From<rusqlite::Error> for CliError {
     fn from(error: rusqlite::Error) -> Self {
-        CliError::Error(Error::Db(error))
+        CliError::CoreError(Error::Db(error))
     }
 }
 impl From<Error> for CliError {

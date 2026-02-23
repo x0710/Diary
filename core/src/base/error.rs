@@ -6,7 +6,7 @@ pub enum Error {
     Db(rusqlite::Error),
     Io(std::io::Error),
     Csv(csv::Error),
-    InvalidDate(String),
+    InvalidData(String),
     UnknownCommand(String),
 }
 impl From<csv::Error> for Error {
@@ -22,7 +22,7 @@ impl From<std::io::Error> for Error {
 }
 impl From<Parse> for Error {
     fn from(value: Parse) -> Self {
-        Error::InvalidDate(value.to_string())
+        Error::InvalidData(value.to_string())
     }
 }
 

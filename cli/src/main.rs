@@ -1,21 +1,19 @@
 use std::error::Error;
-use rusqlite::Connection;
-use diary_cli::terminal::CliSession;
+use diary_core::base::env::open_with_default_database;
+use crate::terminal::CliSession;
 
+mod terminal;
+mod executor;
+mod error;
+mod command;
+mod args;
 const DB_NAME: &str = "diary.db";
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let prjdir = directories::ProjectDirs::from("x0710", "x0710", "diary")
-        .expect("Could not find a valid home directory");
-    let data_dir = prjdir.data_dir();
-    std::fs::create_dir_all(&data_dir)
-        .expect("Could not create data directory");
-    
-    let db_path = data_dir.join(DB_NAME);
-    let db = Connection::open(db_path)?;
+fn main() {
+    let db = open_with_default_database()
+        .expect("Could not open database");
 
     let mut cli = CliSession::new(db);
     cli.run();
 
-    Ok(())
 }
