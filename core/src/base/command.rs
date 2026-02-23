@@ -1,7 +1,9 @@
+//! 软件支持的命令
 use std::str::FromStr;
 use crate::base::date::Date;
 use crate::base::error::Error;
 
+/// 储存用户在做操作时的参数
 #[derive(Debug, Clone)]
 pub enum Command {
     Add(Date, Option<String>),
@@ -11,6 +13,7 @@ pub enum Command {
     // Quit,
     // Help,
 }
+/// 表示用户正在做的操作
 #[derive(Debug, Clone, Copy)]
 pub enum SubCommand {
     Add,

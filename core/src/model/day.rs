@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::ops::Deref;
 use crate::model::event::Event;
 use crate::base::date::{Date, DATE_FORMAT1};
 use crate::storage::io::record::Record;
@@ -26,7 +27,7 @@ impl Day {
     }
     pub fn into_record(self) -> Record {
         Record {
-            date: self.date.date().format(DATE_FORMAT1).unwrap(),
+            date: self.date.format(DATE_FORMAT1).unwrap(),
             event: self.event.instruct,
             weather: self.weather,
             mood: self.mood,
@@ -67,7 +68,7 @@ impl Day {
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[Date: {}, {}]", self.date.date(), self.date.date().weekday())?;
+        write!(f, "[Date: {}, {}]", self.date.deref(), self.date.weekday())?;
         if let Some(w) = &self.weather { write!(f, " [Weather: {}]", w)?; }
         if let Some(m) = &self.mood { write!(f, " [Mood: {}]", m)?; }
         write!(f, "\nEvent: {}", self.event)

@@ -13,9 +13,9 @@ impl From<NaiveDate> for Date {
 impl From<Date> for NaiveDate {
     fn from(date: Date) -> Self {
         NaiveDate::from_ymd(
-            date.date.date().year(),
-            date.date.date().month() as u32,
-            date.date.date().day() as u32,
+            date.date.year(),
+            date.date.month() as u32,
+            date.date.day() as u32,
         )
     }
 }

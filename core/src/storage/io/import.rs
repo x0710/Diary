@@ -51,7 +51,7 @@ impl<'a> Importer<'a> {
             DuplicateStrategy::Ignore => {
                 let mut stmt = self.db_mgr.connection().prepare("INSERT OR IGNORE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")?;
                 for r in &data {
-                    stmt.execute(params![r.date().date().to_string(), r.event().to_string(), r.weather(), r.mood()])?;
+                    stmt.execute(params![r.date().to_string(), r.event().to_string(), r.weather(), r.mood()])?;
                 }
 
             }
@@ -59,7 +59,7 @@ impl<'a> Importer<'a> {
                 let tx = self.db_mgr.transaction()?;
                 let mut stmt = tx.prepare("INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")?;
                 for r in &data {
-                    let ret = stmt.execute(params![r.date().date().to_string(), r.event().to_string(), r.weather(), r.mood()]);
+                    let ret = stmt.execute(params![r.date().to_string(), r.event().to_string(), r.weather(), r.mood()]);
                     if let Err(e) = ret {
                         // Drop change
                         return Err(e.into());

@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use rusqlite::{params, Connection, Transaction};
 use crate::model::day::Day;
 use crate::model::event::Event;
@@ -20,7 +21,7 @@ impl DatabaseManager {
     }
     pub fn remove_day(&self, date: Date) -> Result<usize, rusqlite::Error> {
         self.conn.execute("DELETE FROM day WHERE date=?",
-        [date.date().format(DATE_FORMAT1).unwrap()])
+        [date.format(DATE_FORMAT1).unwrap()])
     }
     pub fn read_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
         let mut stmt = self.conn.prepare("SELECT date, event, weather, mood FROM day ORDER BY date ASC")?;
@@ -31,14 +32,14 @@ impl DatabaseManager {
     }
     pub fn read_from_to(&self, from: Date, to: Date) -> Result<Vec<Day>, rusqlite::Error> {
         let mut stmt = self.conn.prepare("SELECT date,event,weather,mood FROM day WHERE date BETWEEN ?1 AND ?2")?;
-        let res = stmt.query_map([from.date().format(DATE_FORMAT1).unwrap(), to.date().format(DATE_FORMAT1).unwrap()], |row| {
+        let res = stmt.query_map([from.format(DATE_FORMAT1).unwrap(), to.format(DATE_FORMAT1).unwrap()], |row| {
             row_to_day(row)
         })?;
         res.collect()
     }
     pub fn read_day(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
         let r = self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
-                                    params![date.date().format(DATE_FORMAT1).unwrap()], |row|
+                                    params![date.format(DATE_FORMAT1).unwrap()], |row|
             row_to_day(row)
         );
         match r {
@@ -50,7 +51,7 @@ impl DatabaseManager {
     pub fn add_day(&self, day: &Day) -> Result<usize, rusqlite::Error> {
         let res = self.conn.execute(
             "INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
-            (day.date().date().format(DATE_FORMAT1).unwrap(),
+            (day.date().format(DATE_FORMAT1).unwrap(),
              day.event().instruct.to_string(),
              day.weather(),
              day.mood()),

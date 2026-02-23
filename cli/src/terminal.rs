@@ -92,8 +92,12 @@ impl CliSession {
     }
 }
 pub fn edit_with_editor(s: &str, date: impl AsRef<OsStr>) -> Result<String, CliError> {
+    let mut suffix = date.as_ref().to_os_string();
+    // 设置临时文件为markdown格式
+    suffix.push(".md");
+
     let mut editor = tempfile::Builder::default()
-        .suffix(date.as_ref())
+        .suffix(&suffix)
         .prefix("Luck-for-you:>")
         .tempfile()?;
     editor.write_all(s.as_bytes())?;

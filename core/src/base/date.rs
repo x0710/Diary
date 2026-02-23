@@ -1,23 +1,28 @@
+//! 项目封装的日期类
+
+use std::ops::Deref;
 use std::str::FromStr;
 use time::format_description::BorrowedFormatItem;
 use time::{Duration, Month};
 use crate::base::error::Error;
 
+/// 首选日期数据交换格式
+pub const DATE_FORMAT1: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year][month][day]");
+/// 备选日期数据交换格式
+pub const DATE_FORMAT2: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year]-[month]-[day]");
+
+/// 项目中与时间相关的操作均用此结构体表示
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Date {
     date: time::Date,
 }
 impl Date {
-    pub fn date(&self) -> time::Date {
-        self.date
-    }
+    /// 通过年月日手动创建`Date`
     pub fn new(year: i32, month: u8, day: u8) -> Result<Self, time::error::Error> {
         let d = time::Date::from_calendar_date(year, Month::try_from(month)?, day)?;
         Ok(Date { date: d })
     }
 }
-pub const DATE_FORMAT1: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year][month][day]");
-pub const DATE_FORMAT2: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year]-[month]-[day]");
 impl FromStr for Date {
     type Err = Error;
 
@@ -72,11 +77,19 @@ impl From<time::Date> for Date {
     }
 }
 impl Default for Date {
+    /// 通过系统日期实例化日期
     fn default() -> Self {
         let cur = time::OffsetDateTime::now_local()
             .unwrap_or(time::OffsetDateTime::now_utc());
         Self {
             date: cur.date(),
         }
+    }
+}
+impl Deref for Date {
+    type Target = time::Date;
+
+    fn deref(&self) -> &Self::Target {
+        &self.date
     }
 }
