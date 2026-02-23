@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use rusqlite::{params, Connection, Transaction};
 use crate::model::day::Day;
 use crate::model::event::Event;
