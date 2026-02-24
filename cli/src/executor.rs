@@ -12,22 +12,22 @@ impl CliExecutor {
         let mut command = comm.parse::<CliCommand>()?;
         if let CliCommand::Command(Command::Add(date, ctx)) = &mut command {
             // 使用add命令时，查询当天已经写过的数据
-            let mut day_data = self.exec.conn().read_day(*date)?
-                .map(|t| t.event().instruct.clone())
-                .unwrap_or_default();
+            let the_day = self.exec.conn().read_day(*date)?;
+
+            let mut day_ins = the_day.map(|t| t.event.instruct).unwrap_or_default();
             // 如果在命令行中写了其它内容，追加到之前日记的后面
-            if let Some(ctx) = ctx.as_deref() {
-                day_data.push('\n');
-                day_data.push_str(ctx);
+            if let Some(ctx) = ctx.as_deref() && !ctx.is_empty() {
+                day_ins.push('\n');
+                day_ins.push_str(ctx);
             }
-            let subfix = format!("{}-{}-{} {}", date.year(), date.month(), date.day(), date.weekday());
-            let s = edit_with_editor(&day_data, subfix);
+            let subfix = date.to_string();
+            let s = edit_with_editor(&day_ins, subfix);
             *ctx = Some(s?);
         }
         let res = command.exec(&self.exec)?;
         // 
         match command {
-            CliCommand::Command(Command::Check(_)) => res.iter().for_each(|v| println!("{}", v.event())),
+            CliCommand::Command(Command::Check(_)) => res.iter().for_each(|v| println!("{}", v.event)),
             CliCommand::Command(Command::ListAll) => res.iter().for_each(|x| println!("{}", x)),
             _ => (),
         }

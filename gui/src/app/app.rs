@@ -12,22 +12,23 @@ use diary_core::storage::io::mode::Format::JSON;
 use crate::app::component::face::mood_to_face;
 use crate::service::executor::GuiService;
 use crate::model::date::Date;
-use crate::model::day::GuiDayState;
+use crate::model::day::{GuiDayState, DEFAULT_MOOD};
 
 pub struct App {
     executor: GuiService,
     day: GuiDayState,
     date_selected: NaiveDate,
-
     error: Option<Error>,
-
     in_about_page: bool,
 }
 impl App {
     pub fn new(executor: GuiService) -> Self {
         let td = Date::default().into();
         // 初始化 day.date 为一个特殊值，保证第一次刷新会读取数据库
-        let day = Day::default().with_date(Date::from(td-Duration::days(1)).into()).into();
+        let day = Day {
+            date: Date::from(td-Duration::days(1)).into(),
+            ..Day::default()
+        }.into();
         Self {
             executor,
             day,
@@ -149,8 +150,15 @@ impl App {
     fn update_day(&mut self) {
         let date = Date::from(self.date_selected).into();
         if self.day.date != date {
+            // 刷新展示内容
+            let day = GuiDayState {
+                date,
+                event: "".to_string().into(),
+                weather: "".to_string(),
+                mood: DEFAULT_MOOD,
+            };
             self.day = self.executor.read_day(date).ok().unwrap_or_default()
-                .unwrap_or(Day::default().with_date(date).into());
+                .unwrap_or(day);
         }
     }
     /// enter modal mode

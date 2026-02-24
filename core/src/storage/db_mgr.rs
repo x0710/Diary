@@ -1,6 +1,5 @@
 use rusqlite::{params, Connection, Transaction};
 use crate::model::day::Day;
-use crate::model::event::Event;
 use crate::base::date::Date;
 use crate::base::date::DATE_FORMAT1;
 
@@ -50,10 +49,10 @@ impl DatabaseManager {
     pub fn add_day(&self, day: &Day) -> Result<usize, rusqlite::Error> {
         let res = self.conn.execute(
             "INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
-            (day.date().format(DATE_FORMAT1).unwrap(),
-             day.event().instruct.to_string(),
-             day.weather(),
-             day.mood()),
+            params![day.date.format(DATE_FORMAT1).unwrap(),
+             day.event.instruct,
+             day.weather,
+             day.mood],
         )?;
         Ok(res)
     }
@@ -81,5 +80,10 @@ fn row_to_day(row: &rusqlite::Row) -> Result<Day, rusqlite::Error> {
     let weather = row.get(2)?;
     let mood = row.get(3)?;
     // Obj
-    Ok(Day::new(date.into(), Event::new(&event_str), weather, mood))
+    Ok(Day {
+        date: date.into(),
+        event: event_str.into(),
+        weather: weather,
+        mood: mood,
+    })
 }

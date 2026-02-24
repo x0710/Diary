@@ -24,7 +24,7 @@ impl Date {
     }
 
     /// 以本地日期构造`Date`
-    fn native_time() -> Self {
+    pub fn native_time() -> Self {
         let cur = time::OffsetDateTime::now_local()
             .unwrap_or(time::OffsetDateTime::now_utc());
         Self {

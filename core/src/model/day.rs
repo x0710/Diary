@@ -1,70 +1,15 @@
 use std::fmt::Display;
 use std::ops::Deref;
 use crate::model::event::Event;
-use crate::base::date::{Date, DATE_FORMAT1};
-use crate::storage::io::record::Record;
+use crate::base::date::Date;
 
+/// 某一天的完整记录(DTO)
 #[derive(Debug, Clone)]
 pub struct Day {
-    date: Date,
-    event: Event,
-    weather: Option<String>,
-    mood: Option<String>,
-}
-impl Day {
-    pub fn new(
-        date: Date,
-        event: Event,
-        weather: Option<String>,
-        mood: Option<String>,
-    ) -> Day {
-        Day {
-            date,
-            event,
-            weather,
-            mood,
-        }
-    }
-    pub fn into_record(self) -> Record {
-        Record {
-            date: self.date.format(DATE_FORMAT1).unwrap(),
-            event: self.event.instruct,
-            weather: self.weather,
-            mood: self.mood,
-        }
-    }
-    pub fn from_event(event: &Event) -> Self {
-        Self {
-            event: event.clone(),
-            ..Self::default()
-        }
-    }
-    pub fn from_date(date: Date) -> Self {
-        Self {
-            date,
-            ..Self::default()
-        }
-    }
-    pub fn with_event(mut self, event: Event) -> Self {
-        self.event = event.clone();
-        self
-    }
-    pub fn with_date(mut self, date: Date) -> Self {
-        self.date = date;
-        self
-    }
-    pub fn with_weather(mut self, w: impl Into<String>) -> Self {
-        self.weather = Some(w.into());
-        self
-    }
-    pub fn with_mood(mut self, m: impl Into<String>) -> Self {
-        self.mood = Some(m.into());
-        self
-    }
-    pub fn mood(&self) -> Option<&str> { self.mood.as_deref() }
-    pub fn weather(&self) -> Option<&str> { self.weather.as_deref() }
-    pub fn event(&self) -> &Event { &self.event }
-    pub fn date(&self) -> Date { self.date }
+    pub date: Date,
+    pub event: Event,
+    pub weather: Option<String>,
+    pub mood: Option<String>,
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -76,9 +21,9 @@ impl Display for Day {
 }
 impl Default for Day {
     fn default() -> Self {
-        let now = time::OffsetDateTime::now_utc();
+        let now = crate::base::date::Date::native_time();
         Self {
-            date: now.date().into(),
+            date: now,
             event: Event::default(),
             weather: None,
             mood: None,

@@ -1,4 +1,3 @@
-use std::error::Error;
 use diary_core::base::env::open_with_default_database;
 use crate::terminal::CliSession;
 
@@ -7,7 +6,6 @@ mod executor;
 mod error;
 mod command;
 mod args;
-const DB_NAME: &str = "diary.db";
 
 fn main() {
     let db = open_with_default_database()

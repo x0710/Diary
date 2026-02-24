@@ -8,6 +8,5 @@ clap = { version = "4.5.53" , features = ["derive", ]}
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 rustyline = "17.0.2"
 tempfile = "3.24.0"
-directories = "6.0.0"
 
 diary-core = { path = "../core" }

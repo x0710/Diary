@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use chrono::{Datelike, NaiveDate};
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -24,13 +25,19 @@ impl From<Date> for diary_core::base::date::Date {
         date.date
     }
 }
+impl From<diary_core::base::date::Date> for Date {
+    fn from(date: diary_core::base::date::Date) -> Self {
+        Date { date }
+    }
+}
 impl Default for Date {
     fn default() -> Self {
         diary_core::base::date::Date::default().into()
     }
 }
-impl From<diary_core::base::date::Date> for Date {
-    fn from(date: diary_core::base::date::Date) -> Self {
-        Date { date }
+impl Deref for Date {
+    type Target = diary_core::base::date::Date;
+    fn deref(&self) -> &Self::Target {
+        &self.date
     }
 }

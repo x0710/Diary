@@ -5,6 +5,7 @@ use crate::base::error::Error;
 use crate::model::day::Day;
 use crate::storage::db_mgr::DatabaseManager;
 use crate::storage::io::mode::Format;
+use crate::storage::io::record::Record;
 
 pub struct Exporter<'a> {
     db_mgr: &'a DatabaseManager,
@@ -27,7 +28,7 @@ impl<'a> Exporter<'a> {
         Ok(())
     }
     pub fn export(&mut self, days: Vec<Day>) -> Result<(), Error> {
-        let days = days.into_iter().map(|x| x.into_record()).collect::<Vec<_>>();
+        let days: Vec<Record> = days.into_iter().map(|x| x.into()).collect::<Vec<_>>();
         match self.mode {
             Format::CSV => {
                 let mut csv_writer = csv::Writer::from_path(&self.path)?;

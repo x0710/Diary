@@ -12,9 +12,11 @@ impl Executor {
         let mut res = vec![];
         match command {
             Command::Add(date, ctx) => _ = {
-                let d = Day::default()
-                    .with_date(*date)
-                    .with_event(Event::new(ctx.as_deref().unwrap_or_default()));
+                let d = Day {
+                    date: date.clone(),
+                    event: Event::new(ctx.as_deref().unwrap_or_default()),
+                    ..Default::default()
+                };
                 self.handle_add(&d)?;
             },
             Command::Remove(date) => _ = self.handle_del(*date),

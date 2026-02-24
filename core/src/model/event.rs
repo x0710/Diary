@@ -6,20 +6,19 @@ pub struct Event {
 }
 impl Event {
     pub fn new(instruct: &str) -> Event {
-        let s = instruct.to_string();
         Event {
-            instruct: s,
+            instruct: instruct.to_owned(),
         }
+    }
+}
+impl From<String> for Event {
+    fn from(instruct: String) -> Event {
+        Event { instruct }
     }
 }
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.instruct)
-    }
-}
-impl From<&str> for Event {
-    fn from(s: &str) -> Self {
-        Event::new(s)
     }
 }
 impl Default for Event {
