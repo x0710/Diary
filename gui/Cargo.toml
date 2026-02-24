@@ -1,12 +1,11 @@
 [package]
 name = "diary-gui"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2024"
 
 [dependencies]
 chrono = { version = "0.4.42", default-features = false }
 eframe = "0.33.3"
 egui_extras = { version = "0.33.3", features = ["datepicker", "svg", "image"] }
-directories = "6.0.0"
 diary-core = { path = "../core" }
 rfd = "0.16.0"

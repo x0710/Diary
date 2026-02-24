@@ -14,7 +14,7 @@ impl GuiService {
 
     /// 查询某一天的内容
     pub fn read_day(&self, date: Date) -> Result<Option<GuiDayState>, Error> {
-        match self.executor.handle_check(date) {
+        match self.executor.conn().read_day(date) {
             Ok(Some(day)) => Ok(Some(day.into())),
             Ok(None) => Ok(None),
             Err(e) => Err(e.into()), // 转换成统一 Error 类型
@@ -23,13 +23,13 @@ impl GuiService {
 
     /// 更新某一天的日记内容，如果当天有就覆盖，没有就新增
     pub fn update_day(&self, day: &GuiDayState) -> Result<(), Error> {
-        self.executor.handle_add(&day.into())?;
+        self.executor.conn().add_day(&day.into())?;
         Ok(())
     }
 
     /// 删除某一天的日记
     pub fn delete_day(&self, date: Date) -> Result<(), Error> {
-        self.executor.handle_del(date)?;
+        self.executor.conn().remove_day(date)?;
         Ok(())
     }
 

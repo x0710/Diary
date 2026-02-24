@@ -1,5 +1,4 @@
 use crate::base::command::Command;
-use crate::base::date::Date;
 use crate::model::day::Day;
 use crate::model::event::Event;
 use crate::storage::db_mgr::DatabaseManager;
@@ -9,37 +8,25 @@ pub struct Executor {
 }
 impl Executor {
     pub fn exec(&self, command: &Command) -> Result<Vec<Day>, rusqlite::Error> {
-        let mut res = vec![];
         match command {
-            Command::Add(date, ctx) => _ = {
+            Command::Add(date, ctx) => {
                 let d = Day {
-                    date: date.clone(),
+                    date: *date,
                     event: Event::new(ctx.as_deref().unwrap_or_default()),
                     ..Default::default()
                 };
-                self.handle_add(&d)?;
+                self.conn.add_day(&d)?;
+                Ok(vec![d])
             },
-            Command::Remove(date) => _ = self.handle_del(*date),
+            Command::Remove(date) => {
+                self.conn.remove_day(*date)?;
+                Ok(vec![])
+            },
             Command::Check(date) => {
-                if let Some(v) = self.handle_check(*date)? {
-                    res.push(v);
-                }
+                Ok(self.conn.read_day(*date)?.map(|t| vec![t]).unwrap_or_default())
             }
-            Command::ListAll => res.extend(self.handle_list_all()?)
+            Command::ListAll => Ok(self.conn().read_all()?)
         }
-        Ok(res)
-    }
-    pub fn handle_check(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
-        self.conn.read_day(date)
-    }
-    pub fn handle_list_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
-        self.conn.read_all()
-    }
-    pub fn handle_del(&self, date: Date) -> Result<usize, rusqlite::Error> {
-        self.conn.remove_day(date)
-    }
-    pub fn handle_add(&self, day: &Day) -> Result<usize, rusqlite::Error> {
-        self.conn.add_day(day)
     }
     pub fn conn(&self) -> &DatabaseManager {
         &self.conn
