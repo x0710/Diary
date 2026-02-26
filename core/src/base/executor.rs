@@ -1,7 +1,7 @@
 use crate::base::command::Command;
-use crate::model::day::Day;
-use crate::model::event::Event;
-use crate::storage::db_mgr::DatabaseManager;
+use crate::model::Day;
+use crate::model::Event;
+use crate::storage::DatabaseManager;
 
 pub struct Executor {
     conn: DatabaseManager,

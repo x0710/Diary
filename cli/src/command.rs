@@ -1,8 +1,8 @@
 use std::str::FromStr;
 use diary_core::base::command::Command;
 use diary_core::base::executor::Executor;
-use diary_core::model::day::Day;
 use diary_core::base::error::Error;
+use diary_core::model::Day;
 use crate::error::CliError;
 
 #[derive(Debug)]

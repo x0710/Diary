@@ -6,11 +6,11 @@ use clap::Parser;
 use rustyline::{Config, DefaultEditor};
 use rustyline::error::ReadlineError;
 use diary_core::base::executor::Executor;
-use diary_core::storage::db_mgr::DatabaseManager;
-use diary_core::storage::io::export::Exporter;
-use diary_core::storage::io::import::DuplicateStrategy::Replace;
-use diary_core::storage::io::import::Importer;
-use diary_core::storage::io::mode::Format::JSON;
+use diary_core::storage::DatabaseManager;
+use diary_core::utils::io::export::Exporter;
+use diary_core::utils::io::import::DuplicateStrategy::Replace;
+use diary_core::utils::io::import::Importer;
+use diary_core::utils::io::format::Format::Json;
 use crate::args;
 use crate::args::{Args, Commands};
 use crate::error::CliError;
@@ -45,7 +45,7 @@ impl CliSession {
             Commands::Interactive => self.interactive(),
             Commands::Import {path} => {
                 let mut imp = Importer::new(self.executor.exec.conn_mut());
-                let data = Importer::read_from_file(path, JSON)
+                let data = Importer::read_from_file(path, Json)
                     .expect("Error when read file");
                 if !data.1.is_empty() {
                     for i in data.1 {
@@ -58,7 +58,7 @@ impl CliSession {
             Commands::Export {path} => {
                 let mut exp = Exporter::new(self.executor.exec.conn_mut(),
                                         path,
-                                        JSON);
+                                            Json);
                 exp.all_export()
                     .expect("Error when export all data");
 

@@ -1,7 +1,7 @@
 //! Gui 当天实体模型
-use diary_core::model::day::Day;
-use diary_core::model::event::Event;
 use diary_core::base::date::Date;
+use diary_core::model::{Day, Event};
+
 pub const DEFAULT_MOOD: f32 = 0.0;
 
 pub struct GuiDayState {

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 use std::ops::Deref;
-use crate::model::event::Event;
+use crate::model::Event;
 use crate::base::date::Date;
 
 /// 某一天的完整记录(DTO)

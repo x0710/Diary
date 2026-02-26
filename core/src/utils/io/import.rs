@@ -2,10 +2,10 @@ use std::fs::File;
 use std::path::Path;
 use rusqlite::params;
 use crate::base::error::Error;
-use crate::model::day::Day;
-use crate::storage::db_mgr::DatabaseManager;
-use crate::storage::io::mode::Format;
-use crate::storage::io::record::Record;
+use crate::model::Day;
+use crate::storage::DatabaseManager;
+use crate::utils::io::format::Format;
+use crate::utils::io::model::Record;
 
 pub struct Importer<'a> {
     db_mgr: &'a mut DatabaseManager,
@@ -18,7 +18,7 @@ impl<'a> Importer<'a> {
         let mut days = Vec::new();
         let mut errors = Vec::new();
         match format {
-            Format::JSON => {
+            Format::Json => {
                 let res = serde_json::from_reader::<_, Vec<Record>>(File::open(&path)?);
                 if let Ok(r) = res {
                     for i in r {
@@ -29,7 +29,7 @@ impl<'a> Importer<'a> {
                 }
 
             }
-            Format::CSV => {
+            Format::Csv => {
                 let mut csv_reader = csv::Reader::from_path(path)?;
                 for r in csv_reader.deserialize::<Record>() {
                     if let Ok(record) = r {

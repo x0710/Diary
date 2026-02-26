@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use rusqlite::Connection;
 use crate::base::error::Error;
-use crate::storage::db_mgr::DatabaseManager;
+use crate::storage::DatabaseManager;
 
 pub const DEFAULT_DB_NAME: &str = "diary.db";
 pub fn default_project_path() -> PathBuf {
