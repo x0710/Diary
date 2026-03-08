@@ -5,8 +5,8 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4.5.53" , features = ["derive", ]}
-rusqlite = { version = "0.38.0", features = ["bundled"] }
 rustyline = "17.0.2"
 tempfile = "3.24.0"
 
 diary-core = { path = "../core" }
+tokio = { version = "1.50.0", features = ["full"] }

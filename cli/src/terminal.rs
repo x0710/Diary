@@ -32,17 +32,17 @@ impl CliSession {
             executor: exec,
         }
     }
-    pub fn run(&mut self) {
+    pub async fn run(&mut self) {
         if self.args.command.is_some() {
-            self.once();
+            self.once().await;
         }else {
-            self.interactive();
+            self.interactive().await;
         }
     }
     /// 如果用户通过命令行解析
-    fn once(&mut self) {
+    async fn once(&mut self) {
         match self.args.command.as_ref().unwrap() {
-            Commands::Interactive => self.interactive(),
+            Commands::Interactive => self.interactive().await,
             Commands::Import {path} => {
                 let mut imp = Importer::new(self.executor.exec.conn_mut());
                 let data = Importer::read_from_file(path, Json)
@@ -52,21 +52,20 @@ impl CliSession {
                         eprintln!("Import Fail at {}", i);
                     }
                 }
-                imp.import_to_db(data.0, Replace)
+                imp.import_to_db(data.0, Replace).await
                     .expect("Error when import to database");
             }
             Commands::Export {path} => {
                 let mut exp = Exporter::new(self.executor.exec.conn_mut(),
                                         path,
                                             Json);
-                exp.all_export()
+                exp.all_export().await
                     .expect("Error when export all data");
-
             }
         }
     }
     /// 如果用户通过交互式运行程序
-    fn interactive(&self) {
+    async fn interactive(&mut self) {
         // History Enable
         let s = Config::builder().auto_add_history(true).build();
         let mut rl = DefaultEditor::with_config(s).unwrap();
@@ -74,7 +73,7 @@ impl CliSession {
             match rl.readline(">: ") {
                 Ok(line) => {
                     if line.is_empty() { continue }
-                    match self.executor.exec_command(&line) {
+                    match self.executor.exec_command(&line).await {
                         Ok(_) => (),
                         Err(CliError::Quit) => break,
                         Err(CliError::InvalidArgs(s)) => println!("Invalid args: {}", s),

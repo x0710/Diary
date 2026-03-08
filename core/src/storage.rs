@@ -1,89 +1,94 @@
-use rusqlite::{params, Connection, Transaction};
+use std::ops::{Deref, DerefMut};
+use sqlx::{Connection, Executor, Row, SqliteConnection};
+use sqlx::sqlite::SqliteRow;
 use crate::model::Day;
 use crate::base::date::Date;
 use crate::base::date::DATE_FORMAT1;
+use crate::base::error::Error;
 
 pub struct DatabaseManager {
-    conn: Connection,
+    pub(crate) conn: SqliteConnection,
 }
 impl DatabaseManager {
-    pub fn transaction(&mut self) ->  rusqlite::Result<Transaction<'_>> {
-        self.conn.transaction()
-    }
-    pub fn connection(&self) -> &Connection {
-        &self.conn
-    }
-    pub fn from_path(path: &std::path::Path) -> Result<Self, rusqlite::Error> {
-        let conn = Connection::open(path)?;
-        Self::try_from(conn)
-    }
-    pub fn remove_day(&self, date: Date) -> Result<usize, rusqlite::Error> {
-        self.conn.execute("DELETE FROM day WHERE date=?",
-                          [date.format(DATE_FORMAT1).unwrap()])
-    }
-    pub fn read_all(&self) -> Result<Vec<Day>, rusqlite::Error> {
-        let mut stmt = self.conn.prepare("SELECT date, event, weather, mood FROM day ORDER BY date ASC")?;
-        let res = stmt
-            .query_map((), |row| row_to_day(row))?;
-        res.collect()
-
-    }
-    pub fn read_from_to(&self, from: Date, to: Date) -> Result<Vec<Day>, rusqlite::Error> {
-        let mut stmt = self.conn.prepare("SELECT date,event,weather,mood FROM day WHERE date BETWEEN ?1 AND ?2")?;
-        let res = stmt.query_map([from.format(DATE_FORMAT1).unwrap(), to.format(DATE_FORMAT1).unwrap()], |row| {
-            row_to_day(row)
-        })?;
-        res.collect()
-    }
-    pub fn read_day(&self, date: Date) -> Result<Option<Day>, rusqlite::Error> {
-        let r = self.conn.query_row("SELECT date,event,weather,mood FROM day WHERE date=?",
-                                    params![date.format(DATE_FORMAT1).unwrap()], |row|
-                                        row_to_day(row)
-        );
-        match r {
-            Ok(day) => Ok(Some(day)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e),
-        }
-    }
-    pub fn add_day(&self, day: &Day) -> Result<usize, rusqlite::Error> {
-        let res = self.conn.execute(
-            "INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)",
-            params![day.date.format(DATE_FORMAT1).unwrap(),
-             day.event.instruct,
-             day.weather,
-             day.mood],
-        )?;
-        Ok(res)
-    }
-}
-impl TryFrom<Connection> for DatabaseManager {
-    type Error = rusqlite::Error;
-    fn try_from(conn: Connection) -> Result<Self, Self::Error> {
-        conn.execute(r#"
+    // pub fn transaction(&mut self) ->  Result<Transaction<'_>> {
+    //     self.conn.transaction()
+    // }
+    pub async fn from_path(path: &std::path::Path) -> Result<Self, Error> {
+        let mut conn = SqliteConnection::connect(path.to_str().unwrap()).await?;
+        let init_query = sqlx::query(r"
         CREATE TABLE IF NOT EXISTS day (
             date TEXT NOT NULL PRIMARY KEY,
             event TEXT,
             weather TEXT,
             mood TEXT)
-        "#, ())?;
+        ");
+        conn.execute(init_query).await?;
         Ok(Self {
-            conn,
+            conn
         })
     }
+    pub async fn remove_day(&mut self, date: Date) -> Result<u64, Error> {
+        let query = sqlx::query("DELETE FROM day WHERE date = ?")
+            .bind(date.format(DATE_FORMAT1).unwrap());
+        Ok(self.conn.execute(query).await?.rows_affected())
+    }
+    pub async fn read_all(&mut self) -> Result<Vec<Day>, Error> {
+        let query = sqlx::query("SELECT date, event, weather, mood FROM day ORDER BY date ASC");
+        Ok(self.conn.fetch_all(query).await?
+            .into_iter()
+            .map(|t| row_to_day(t))
+            .collect())
+
+
+    }
+    pub async fn read_from_to(&mut self, from: Date, to: Date) -> Result<Vec<Day>, Error> {
+        let query = sqlx::query("SELECT date,event,weather,mood FROM day WHERE date BETWEEN ?1 AND ?2")
+            .bind(from.format(DATE_FORMAT1).unwrap())
+            .bind(to.format(DATE_FORMAT1).unwrap());
+        Ok(self.conn.fetch_all(query).await?
+            .into_iter()
+            .map(|t| row_to_day(t))
+            .collect())
+    }
+    pub async fn read_day(&mut self, date: Date) -> Result<Option<Day>, Error> {
+        let query = sqlx::query("SELECT date,event,weather,mood FROM day WHERE date = ?")
+            .bind(date.format(DATE_FORMAT1).unwrap());
+        Ok(self.conn.fetch_optional(query).await?
+            .map(|t| row_to_day(t)))
+    }
+    pub async fn add_day(&mut self, day: &Day) -> Result<u64, Error> {
+        let query = sqlx::query("INSERT OR REPLACE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")
+            .bind(day.date.format(DATE_FORMAT1).unwrap())
+            .bind(&day.event.instruct)
+            .bind(day.weather.as_deref())
+            .bind(day.mood.as_deref());
+        Ok(self.conn.execute(query).await?.rows_affected())
+    }
 }
-fn row_to_day(row: &rusqlite::Row) -> Result<Day, rusqlite::Error> {
+impl DerefMut for DatabaseManager {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.conn
+    }
+}
+impl Deref for DatabaseManager {
+    type Target = SqliteConnection;
+
+    fn deref(&self) -> &Self::Target {
+        &self.conn
+    }
+}
+fn row_to_day(row: SqliteRow) -> Day {
     // raw_datum
-    let date_raw: String = row.get(0)?;
+    let date_raw: String = row.get("date");
     let date = time::Date::parse(&date_raw, DATE_FORMAT1).unwrap();
-    let event_str: String = row.get(1)?;
-    let weather = row.get(2)?;
-    let mood = row.get(3)?;
+    let event_str: String = row.get("event");
+    let weather = row.get("weather");
+    let mood = row.get("mood");
     // Obj
-    Ok(Day {
+    Day {
         date: date.into(),
         event: event_str.into(),
         weather,
         mood,
-    })
+    }
 }

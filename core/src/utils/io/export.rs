@@ -8,12 +8,12 @@ use crate::utils::io::format::Format;
 use crate::utils::io::model::Record;
 
 pub struct Exporter<'a> {
-    db_mgr: &'a DatabaseManager,
+    db_mgr: &'a mut DatabaseManager,
     path: PathBuf,
     mode: Format,
 }
 impl<'a> Exporter<'a> {
-    pub fn new(db_mgr: &'a DatabaseManager, export_path: impl AsRef<Path>, mode: Format) -> Self {
+    pub fn new(db_mgr: &'a mut DatabaseManager, export_path: impl AsRef<Path>, mode: Format) -> Self {
         let path = export_path.as_ref().to_path_buf();
         Self {
             db_mgr,
@@ -22,8 +22,8 @@ impl<'a> Exporter<'a> {
         }
     }
 
-    pub fn all_export(&mut self) -> Result<(), Error> {
-        let res = self.db_mgr.read_all()?;
+    pub async fn all_export(&mut self) -> Result<(), Error> {
+        let res = self.db_mgr.read_all().await?;
         self.export(res)?;
         Ok(())
     }

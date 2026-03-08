@@ -1,4 +1,5 @@
 use crate::base::command::Command;
+use crate::base::error::Error;
 use crate::model::Day;
 use crate::model::Event;
 use crate::storage::DatabaseManager;
@@ -7,7 +8,7 @@ pub struct Executor {
     conn: DatabaseManager,
 }
 impl Executor {
-    pub fn exec(&self, command: &Command) -> Result<Vec<Day>, rusqlite::Error> {
+    pub async fn exec(&mut self, command: &Command) -> Result<Vec<Day>, Error> {
         match command {
             Command::Add(date, ctx) => {
                 let d = Day {
@@ -15,17 +16,17 @@ impl Executor {
                     event: Event::new(ctx.as_deref().unwrap_or_default()),
                     ..Default::default()
                 };
-                self.conn.add_day(&d)?;
+                self.conn.add_day(&d).await?;
                 Ok(vec![d])
             },
             Command::Remove(date) => {
-                self.conn.remove_day(*date)?;
+                self.conn.remove_day(*date).await?;
                 Ok(vec![])
             },
             Command::Check(date) => {
-                Ok(self.conn.read_day(*date)?.map(|t| vec![t]).unwrap_or_default())
+                Ok(self.conn.read_day(*date).await?.map(|t| vec![t]).unwrap_or_default())
             }
-            Command::ListAll => Ok(self.conn().read_all()?)
+            Command::ListAll => Ok(self.conn.read_all().await?)
         }
     }
     pub fn conn(&self) -> &DatabaseManager {

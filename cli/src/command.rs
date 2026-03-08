@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use diary_core::base::command::Command;
+use diary_core::base::env::version;
 use diary_core::base::executor::Executor;
 use diary_core::base::error::Error;
 use diary_core::model::Day;
@@ -8,27 +9,33 @@ use crate::error::CliError;
 #[derive(Debug)]
 pub enum CliCommand {
     Command(Command),
+    Version,
     Help,
     Quit,
 }
 
 impl CliCommand {
-    pub fn exec(&self, exec: &Executor) -> Result<Vec<Day>, CliError> {
+    pub async fn exec(&self, exec: &mut Executor) -> Result<Vec<Day>, CliError> {
         match self {
-            CliCommand::Command(comm) => exec.exec(comm)
+            CliCommand::Command(comm) => exec.exec(comm).await
                 .map_err(|e| e.into()),
             CliCommand::Help => {
                 self.handle_help();
                 Ok(Vec::new())
-            }
+            },
+            CliCommand::Version => {
+                self.handle_version();
+                Ok(Vec::new())
+            },
             CliCommand::Quit => Err(CliError::Quit),
         }
     }
     fn handle_version(&self) {
-        println!("version: {}", env!("CARGO_PKG_VERSION"));
+        println!("cli-version: {}\ncore-version: {}",
+                 env!("CARGO_PKG_VERSION"),
+                 version());
     }
     fn handle_help(&self) {
-        self.handle_version();
         println!(r#"
 Available commands:
   add <date> [context]  - Add or edit an entry with context appened at the last
@@ -50,6 +57,7 @@ impl FromStr for CliCommand {
                 match cmd.as_str() {
                     "help" | "h" => Ok(CliCommand::Help),
                     "quit" | "exit" | "q" => Ok(CliCommand::Quit),
+                    "version" | "v" => Ok(CliCommand::Version),
                     _ => Err(CliError::UnknownCommand(s.to_string()))
                 }
             },

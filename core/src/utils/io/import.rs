@@ -1,6 +1,8 @@
 use std::fs::File;
+use std::ops::DerefMut;
 use std::path::Path;
-use rusqlite::params;
+use sqlx::{Connection, Executor};
+use crate::base::date::DATE_FORMAT1;
 use crate::base::error::Error;
 use crate::model::Day;
 use crate::storage::DatabaseManager;
@@ -43,30 +45,34 @@ impl<'a> Importer<'a> {
         }
         Ok((days, errors))
     }
-    pub fn import_to_db(&mut self, data: Vec<Day>, mode: DuplicateStrategy) -> Result<(), Error> {
+    pub async fn import_to_db(&mut self, data: Vec<Day>, mode: DuplicateStrategy) -> Result<(), Error> {
         match mode {
             DuplicateStrategy::Replace => {
-                for r in &data { self.db_mgr.add_day(r)?; }
+                for r in &data { self.db_mgr.add_day(r).await?; }
             }
             DuplicateStrategy::Ignore => {
-                let mut stmt = self.db_mgr.connection().prepare("INSERT OR IGNORE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")?;
                 for r in data {
-                    stmt.execute(params![r.date.to_string(), r.event.instruct, r.weather, r.mood])?;
+                    let query = sqlx::query("INSERT OR IGNORE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)");
+                    query.bind(r.date.format(DATE_FORMAT1).unwrap())
+                        .bind(r.event.instruct)
+                        .bind(r.weather)
+                        .bind(r.mood)
+                        .execute(self.db_mgr.deref_mut()).await?;
+
                 }
 
             }
             DuplicateStrategy::Fail => {
-                let tx = self.db_mgr.transaction()?;
-                let mut stmt = tx.prepare("INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")?;
+                let mut bg = self.db_mgr.begin().await?;
                 for r in data {
-                    let ret = stmt.execute(params![r.date.to_string(), r.event.instruct, r.weather, r.mood]);
-                    if let Err(e) = ret {
-                        // Drop change
-                        return Err(e.into());
-                    }
+                    let query = sqlx::query("INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")
+                        .bind(r.date.format(DATE_FORMAT1).unwrap())
+                        .bind(r.event.instruct)
+                        .bind(r.weather)
+                        .bind(r.mood);
+                    let _ = query.execute(&mut *bg).await?;
                 }
-                drop(stmt);
-                tx.commit()?;
+                bg.commit().await?;
             }
             DuplicateStrategy::Append => {todo!()}
         }

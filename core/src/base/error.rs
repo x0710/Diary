@@ -3,7 +3,7 @@ use time::error::Parse;
 
 #[derive(Debug)]
 pub enum Error {
-    Db(rusqlite::Error),
+    Db(sqlx::Error),
     Io(std::io::Error),
     Csv(csv::Error),
     InvalidData(String),
@@ -26,8 +26,8 @@ impl From<Parse> for Error {
     }
 }
 
-impl From<rusqlite::Error> for Error {
-    fn from(err: rusqlite::Error) -> Self {
+impl From<sqlx::Error> for Error {
+    fn from(err: sqlx::Error) -> Self {
         Error::Db(err)
     }
 }
