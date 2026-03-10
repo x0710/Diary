@@ -33,8 +33,7 @@ impl CliSession {
         }
     }
     pub fn run(&mut self) {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
+        async_std::task::block_on(async {
             if self.args.command.is_some() {
                 self.once().await;
             }else {
@@ -60,8 +59,7 @@ impl CliSession {
             }
             Commands::Export {path} => {
                 let mut exp = Exporter::new(self.executor.exec.conn_mut(),
-                                        path,
-                                            Json);
+                                        path, Json);
                 exp.all_export().await
                     .expect("Error when export all data");
             }

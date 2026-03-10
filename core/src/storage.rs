@@ -10,9 +10,6 @@ pub struct DatabaseManager {
     pub(crate) conn: SqliteConnection,
 }
 impl DatabaseManager {
-    // pub fn transaction(&mut self) ->  Result<Transaction<'_>> {
-    //     self.conn.transaction()
-    // }
     pub fn from_path(path: &std::path::Path) -> Result<Self, Error> {
         let init_query = sqlx::query(r"
         CREATE TABLE IF NOT EXISTS day (
@@ -21,7 +18,8 @@ impl DatabaseManager {
             weather TEXT,
             mood TEXT)
         ");
-        let conn = async_std::task::block_on(async {
+        let rt = tokio::runtime::Builder::new_current_thread().build()?;
+        let conn = rt.block_on(async {
             let mut conn = SqliteConnection::connect(path.to_str().unwrap()).await?;
             conn.execute(init_query).await?;
             Ok::<SqliteConnection, Error>(conn)

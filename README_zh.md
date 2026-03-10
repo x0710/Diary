@@ -48,6 +48,9 @@ target/release/diary
 
 你可以将其移动到 `$PATH` 中方便使用。
 
+> 注意：由于Windows终端不支持cli编辑器，CLI版本在Windows上极其不稳定，
+> 请换用gui版本。
+
 ### 使用发布版本
 
 可直接从 GitHub Releases 页面下载已编译好的二进制文件。
@@ -88,6 +91,13 @@ diary
 >: ls
 ```
 
+### 导入/导出数据
+```bash
+# 导出数据到filename.json中
+diary export <filename.json>
+# 从filename.json中导入数据
+diary import <filename.json>
+```
 ---
 
 ## 数据存储

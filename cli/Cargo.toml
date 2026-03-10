@@ -9,4 +9,4 @@ rustyline = "17.0.2"
 tempfile = "3.24.0"
 
 diary-core = { path = "../core" }
-tokio = { version = "1.50.0", features = ["full"] }
+async-std = "1.13.2"

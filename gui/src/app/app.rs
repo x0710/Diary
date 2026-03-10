@@ -1,7 +1,6 @@
 use std::process::exit;
 use chrono::{Duration, NaiveDate};
-use eframe::egui;
-use egui::*;
+use eframe::egui::*;
 use eframe::Frame;
 use egui_extras::DatePickerButton;
 use diary_core::base::error::Error;
@@ -78,7 +77,7 @@ impl eframe::App for App {
                                     self.error = async_std::task::block_on(async {
                                         imp.import_to_db(r.0, DuplicateStrategy::Replace).await.err()
                                     });
-                                    
+
                                 }
                                 Err(err) => self.error = Some(err),
                             }
@@ -170,7 +169,7 @@ impl App {
     fn open_modal(&mut self, ctx: &Context) {
         let scn_rec = ctx.content_rect();
         // block
-        Area::new(egui::Id::from("modal"))
+        Area::new(Id::from("modal"))
             .order(Order::Foreground)
             .fixed_pos(scn_rec.min)
             .show(ctx, |ui| {
@@ -188,6 +187,7 @@ impl App {
         self.error_modal(ctx);
         self.about_modal(ctx);
     }
+    #[warn(deprecated)]
     fn about_modal(&mut self, ctx: &Context) {
         if !self.in_about_page {return}
         Window::new("About")
@@ -214,7 +214,8 @@ impl App {
 
                         });
                     });
-                    ui.label(RichText::new(format!("v{}", env!("CARGO_PKG_VERSION"))).weak());
+                    ui.label(RichText::new(
+                        format!("v{}, Core Version: {}" , env!("CARGO_PKG_VERSION"), diary_core::base::env::version())).weak());
                     ui.separator();
                     ui.add_space(4.0);
                     ui.label("A high-performance tool built with Rust and egui.");

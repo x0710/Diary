@@ -8,24 +8,24 @@ A minimal personal diary CLI tool written in Rust.
 
 ## Overview
 
-**Diary** is a lightweight command-line tool for recording, viewing, and managing short daily notes.
+**Diary** is a lightweight command-line diary tool for quickly recording, viewing, and managing daily brief notes.
 
-It is designed to be:
+Design goals:
 
 * Simple and fast
-* Script-friendly
-* Backed by SQLite
-* Easy to extend and hack on
+* Suitable for scripts and terminal use
+* Local storage using SQLite
+* Easy to extend and refactor
 
-The project is still evolving, and some features are experimental.
+The project is still evolving, and some features may change over time.
 
 ---
 
 ## Features
 
 * ✅ Add diary entries by date
-* ✅ Read entries for a specific day
-* ✅ Persistent storage using SQLite
+* ✅ View entries for a specific date
+* ✅ Persistent storage with SQLite
 * ✅ List existing entries
 
 ---
@@ -46,11 +46,13 @@ The binary will be located at:
 target/release/diary
 ```
 
-You may want to move it into your `$PATH`.
+You can move it to your `$PATH` for easier use.
 
-### From releases
+> Note: CLI version is highly unstable on Windows terminals because they don’t support CLI editors. Please use the GUI version on Windows.
 
-Download the prebuilt binary from the Releases page and run it directly.
+### Use Prebuilt Releases
+
+You can also download precompiled binaries directly from the GitHub Releases page.
 
 ---
 
@@ -77,7 +79,7 @@ Supported date formats:
 * yesterday: `yesterday` / `yes` / `y`
 * specific date: `YYYYMMDD` / ~~`YYYY-MM-DD`~~
 
-### Read an entry
+### View Entries for a Specific Date
 
 ```bash
 >: check 2025-01-01
@@ -89,30 +91,40 @@ Supported date formats:
 >: ls
 ```
 
+### Import / Export Data
+
+```bash
+# Export data to filename.json
+diary export <filename.json>
+
+# Import data from filename.json
+diary import <filename.json>
+```
+
 ---
 
 ## Data Storage
 
-* Entries are stored locally in an SQLite database
-* No network access
-* No background services
+* All data is stored locally in an SQLite database
+* No network connection required
+* No background service running
 
 ---
 
-## Roadmap
+## Development Roadmap
 
 * [ ] Full-text search
-* [x] Configurable editor support (CLI)
-* [x] Import / export (Only support for JSON now)
-* [x] GUI
-* [ ] Visualization / charts?
+* [x] Configurable editor support
+* [x] Import / Export
+* [x] Graphical User Interface (GUI)
+* [ ] Visualization / Charts?
 
 ---
 
 ## Development Status
 
-This project is primarily developed for learning and personal daily use.
-APIs and behavior may change without notice.
+This project is primarily for learning and personal use.
+APIs and behavior may change in the future, and backward compatibility is not guaranteed.
 
 ---
 
@@ -124,12 +136,11 @@ MIT License
 
 ## Contributing
 
-**Issues and pull requests are welcome.**
+**Contributions via Issues and Pull Requests are welcome.**
 
-Feel free to experiment, refactor, or suggest improvements.
+Whether it’s refactoring, experimental changes, or feature suggestions, all contributions are appreciated.
 
 ---
 
-> A diary should be simple.
-> The tool should be even simpler.
-
+> The diary should be simple enough,
+> and the tool itself should be even simpler.
