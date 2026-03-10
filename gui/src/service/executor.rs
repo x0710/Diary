@@ -13,24 +13,27 @@ impl GuiService {
     }
 
     /// 查询某一天的内容
-    pub fn read_day(&self, date: Date) -> Result<Option<GuiDayState>, Error> {
-        match self.executor.conn().read_day(date) {
-            Ok(Some(day)) => Ok(Some(day.into())),
-            Ok(None) => Ok(None),
-            Err(e) => Err(e.into()), // 转换成统一 Error 类型
-        }
+    pub fn read_day(&mut self, date: Date) -> Result<Option<GuiDayState>, Error> {
+        async_std::task::block_on(async {
+            Ok(self.executor.conn_mut().read_day(date).await?
+                .map(GuiDayState::from))
+        })
     }
 
     /// 更新某一天的日记内容，如果当天有就覆盖，没有就新增
-    pub fn update_day(&self, day: &GuiDayState) -> Result<(), Error> {
-        self.executor.conn().add_day(&day.into())?;
-        Ok(())
+    pub fn update_day(&mut self, day: &GuiDayState) -> Result<(), Error> {
+        async_std::task::block_on(async {
+            self.executor.conn_mut().add_day(&day.into()).await?;
+            Ok(())
+        })
     }
 
     /// 删除某一天的日记
-    pub fn delete_day(&self, date: Date) -> Result<(), Error> {
-        self.executor.conn().remove_day(date)?;
-        Ok(())
+    pub fn delete_day(&mut self, date: Date) -> Result<(), Error> {
+        async_std::task::block_on(async {
+            self.executor.conn_mut().remove_day(date).await?;
+            Ok(())
+        })
     }
 
 }

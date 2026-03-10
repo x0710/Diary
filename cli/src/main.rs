@@ -7,11 +7,10 @@ mod error;
 mod command;
 mod args;
 
-#[tokio::main]
-async fn main() {
-    let db = open_with_default_database().await
+fn main() {
+    let db = open_with_default_database()
         .expect("Could not open database");
 
     let mut cli = CliSession::new(db);
-    cli.run().await;
+    cli.run()
 }

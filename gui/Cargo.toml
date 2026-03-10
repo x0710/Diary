@@ -1,6 +1,6 @@
 [package]
 name = "diary-gui"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2024"
 
 [dependencies]
@@ -9,3 +9,4 @@ eframe = "0.33.3"
 egui_extras = { version = "0.33.3", features = ["datepicker", "svg", "image"] }
 diary-core = { path = "../core" }
 rfd = "0.16.0"
+async-std = "1.13.2"

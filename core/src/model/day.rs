@@ -9,7 +9,7 @@ pub struct Day {
     pub date: Date,
     pub event: Event,
     pub weather: Option<String>,
-    pub mood: Option<String>,
+    pub mood: Option<f64>,
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

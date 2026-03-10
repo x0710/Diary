@@ -1,6 +1,6 @@
 use eframe::egui::Color32;
 
-pub fn mood_to_face(mood: f32) -> (&'static str, Color32) {
+pub fn mood_to_face(mood: f64) -> (&'static str, Color32) {
     let (face, color) = match mood {
         v if v == 0.0 => ("(・_・?)", Color32::WHITE), // 未知
 

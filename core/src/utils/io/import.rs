@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::ops::DerefMut;
 use std::path::Path;
-use sqlx::{Connection, Executor};
+use sqlx::{Connection,};
 use crate::base::date::DATE_FORMAT1;
 use crate::base::error::Error;
 use crate::model::Day;

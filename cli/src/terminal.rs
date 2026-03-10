@@ -32,12 +32,15 @@ impl CliSession {
             executor: exec,
         }
     }
-    pub async fn run(&mut self) {
-        if self.args.command.is_some() {
-            self.once().await;
-        }else {
-            self.interactive().await;
-        }
+    pub fn run(&mut self) {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            if self.args.command.is_some() {
+                self.once().await;
+            }else {
+                self.interactive().await;
+            }
+        });
     }
     /// 如果用户通过命令行解析
     async fn once(&mut self) {
@@ -79,8 +82,7 @@ impl CliSession {
                         Err(CliError::InvalidArgs(s)) => println!("Invalid args: {}", s),
                         Err(CliError::Io(s)) => println!("IO error: {}", s),
                         Err(CliError::UnknownCommand(s)) => println!("Unknown command: {}", s),
-
-                        _ => {println!("?I don't know what happened.")}
+                        // Err(CliError::CoreError(e)) => println!("Core Error: {}", e),
                     }
                 },
                 Err(ReadlineError::Eof) | Err(ReadlineError::Interrupted) => {

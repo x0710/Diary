@@ -11,18 +11,16 @@ pub fn default_project_path() -> PathBuf {
         .expect("Could not create data directory");
     data_dir.to_path_buf()
 }
-pub async fn open_with_default_database() -> Result<DatabaseManager, Error> {
+pub fn open_with_default_database() -> Result<DatabaseManager, Error> {
     let base_dir = default_project_path();
     let db_path = base_dir.join(DEFAULT_DB_NAME);
 
-    let conn = DatabaseManager::from_path(&db_path);
-    Ok(conn.await?)
+    open_with_db_file(db_path)
 }
-pub async fn open_with_db_file(
+pub fn open_with_db_file(
     db_path: PathBuf,
 ) -> Result<DatabaseManager, Error> {
-    let conn = DatabaseManager::from_path(&db_path);
-    Ok(conn.await?)
+    Ok(DatabaseManager::from_path(&db_path)?)
 }
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()

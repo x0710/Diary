@@ -1,7 +1,6 @@
 use diary_core::base::error::Error;
 
 pub enum CliError {
-    CoreError(Error),
     UnknownCommand(String),
     InvalidArgs(String),
     Io(std::io::Error),

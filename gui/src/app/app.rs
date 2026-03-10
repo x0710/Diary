@@ -56,8 +56,10 @@ impl eframe::App for App {
                             let format = file.extension().unwrap().to_str().unwrap().to_ascii_lowercase().as_str()
                                 .parse();
                             if let Ok(format) = format {
-                                let mut exp = Exporter::new(self.executor.executor.conn_mut(), file, format);
-                                self.error = exp.all_export().err();
+                                self.error = async_std::task::block_on(async {
+                                    let mut exp = Exporter::new(self.executor.executor.conn_mut(), file, format);
+                                    exp.all_export().await.err()
+                                });
                             }
                         }else {
                             eprintln!("Please select a folder");
@@ -73,7 +75,10 @@ impl eframe::App for App {
                                     if !ers.is_empty() {
                                         self.error = Some(Error::InvalidData(ers.into()));
                                     }
-                                    self.error = imp.import_to_db(r.0, DuplicateStrategy::Replace).err();
+                                    self.error = async_std::task::block_on(async {
+                                        imp.import_to_db(r.0, DuplicateStrategy::Replace).await.err()
+                                    });
+                                    
                                 }
                                 Err(err) => self.error = Some(err),
                             }

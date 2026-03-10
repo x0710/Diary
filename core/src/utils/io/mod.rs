@@ -10,6 +10,7 @@
 //! - 导入导出使用独立的数据结构（Record）
 //! - 通过 `From` / `TryFrom` 实现与领域模型之间的转换
 
+
 /// 导入相关实现。
 ///
 /// 负责：
@@ -55,6 +56,7 @@ pub mod model {
     /// - `date` 采用字符串形式存储，便于序列化
     /// - `weather` 与 `mood` 为可选字段
     #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[derive(sqlx::FromRow)]
     pub struct Record {
         pub date: String,
         pub event: String,
@@ -70,14 +72,18 @@ pub mod model {
         /// 可能失败的情况：
         /// - 日期格式解析失败
         fn try_from(record: Record) -> Result<Self, Self::Error> {
-            let date = time::Date::parse(record.date.as_str(), DATE_FORMAT1)?;
+            let date = time::Date::parse(&record.date, DATE_FORMAT1)?;
             let event = record.event;
+            let mood = record.mood
+                .map(|m| m.parse())
+                .transpose()
+                .unwrap_or(None);
 
             Ok(Self {
                 date: date.into(),
                 event: event.into(),
                 weather: record.weather,
-                mood: record.mood,
+                mood: mood,
             })
         }
     }
@@ -89,7 +95,7 @@ pub mod model {
                 date: value.date.format(DATE_FORMAT1).unwrap().to_string(),
                 event: value.event.instruct,
                 weather: value.weather,
-                mood: value.mood,
+                mood: value.mood.map(|t| t.to_string()),
             }
         }
     }
