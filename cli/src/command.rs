@@ -6,6 +6,7 @@ use diary_core::base::env::version;
 use diary_core::model::Day;
 use crate::error::CliError;
 use crate::executor::Executor;
+use SubCommand::*;
 
 /// 储存用户在做操作时的参数
 #[derive(Debug, Clone)]
@@ -34,7 +35,7 @@ impl CliCommand {
     pub async fn exec(&self, exec: &mut Executor) -> Result<Vec<Day>, CliError> {
         match self {
             CliCommand::CoreCommand(comm) => exec.exec(comm).await
-                .map_err(|e| e.into()),
+                .map_err(Into::into),
             CliCommand::Help => {
                 self.handle_help();
                 Ok(Vec::new())
@@ -66,29 +67,24 @@ Available commands:
 impl FromStr for CliCommand {
     type Err = CliError;
     fn from_str(s: &str) -> Result<Self, CliError> {
-        let res = s.parse();
-        match res {
-            Ok(cmd) => Ok(CliCommand::CoreCommand(cmd)),
-            Err(CliError::UnknownCommand(cmd)) => {
-                match cmd.as_str() {
-                    "help" | "h" => Ok(CliCommand::Help),
-                    "quit" | "exit" | "q" => Ok(CliCommand::Quit),
-                    "version" | "v" => Ok(CliCommand::Version),
-                    _ => Err(CliError::UnknownCommand(cmd)),
-                }
-            },
-            Err(e) => Err(e.into()),
+        match s.trim() {
+            "help" | "h" => return Ok(Self::Help),
+            "quit" | "exit" | "q" => return Ok(Self::Quit),
+            "version" | "v" => return Ok(Self::Version),
+            _ => (),
         }
+
+        Ok(Self::CoreCommand(s.parse()?))
     }
 }
 impl FromStr for SubCommand {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, String> {
         match s {
-            "ad" | "add" => Ok(SubCommand::Add),
-            "rm" | "remove" | "delete" | "del" => Ok(SubCommand::Remove),
-            "chk" | "check" | "read" | "show" => Ok(SubCommand::Check),
-            "ls" | "list" => Ok(SubCommand::ListAll),
+            "ad" | "add" => Ok(Add),
+            "rm" | "remove" | "delete" | "del" => Ok(Remove),
+            "chk" | "check" | "read" | "show" => Ok(Check),
+            "ls" | "list" => Ok(ListAll),
             _ => Err(s.to_string()),
         }
     }
@@ -107,16 +103,10 @@ impl FromStr for Command {
         let ctx = args.next();
 
         match sub {
-            SubCommand::Add => {
-                Ok(Command::Add(date?, ctx.map(str::to_string)))
-            }
-            SubCommand::Remove => {
-                Ok(Command::Remove(date?))
-            }
-            SubCommand::Check => {
-                Ok(Command::Check(date?))
-            }
-            SubCommand::ListAll => Ok(Command::ListAll),
+            Add => Ok(Command::Add(date?, ctx.map(str::to_string))),
+            Remove => Ok(Command::Remove(date?)),
+            Check => Ok(Command::Check(date?)),
+            ListAll => Ok(Command::ListAll),
         }
     }
 }

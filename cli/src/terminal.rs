@@ -14,15 +14,14 @@ use diary_core::utils::io::import::Importer;
 use crate::args;
 use crate::args::{CliArgs, Commands};
 use crate::error::CliError;
-use crate::execute::CliExecutor;
 
 /// Cli实体表示
-pub struct CliSession<T: CliExecutor> {
+pub struct CliSession {
     /// 用户启动程序时所采用的参数
     pub args: CliArgs,
-    pub(crate) executor: T,
+    pub(crate) executor: Executor,
 }
-impl CliSession<Executor> {
+impl CliSession {
     pub fn new(db_mgr: DatabaseManager) -> Self {
         let args = CliArgs::parse();
         let exec = Executor::from(db_mgr);
@@ -31,7 +30,7 @@ impl CliSession<Executor> {
             executor: exec,
         }
     }
-    pub fn run(&mut self) {
+    pub fn run(mut self) {
         async_std::task::block_on(async {
             if self.args.command.is_some() {
                 self.once().await;
