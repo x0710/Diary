@@ -103,16 +103,35 @@ pub fn edit_with_editor(day: &mut Day) -> Result<String, Error> {
         .suffix(&suffix)
         .prefix("Luck-for-you:>")
         .tempfile()?;
+
+    let pref = format!(r#"====================
+Date: {}
+Weather: {}
+Mood: {}
+====================
+"#, day.date.to_string(), day.weather.as_deref().unwrap_or_default(), day.mood.unwrap_or_default());
+
+    editor.write_all(pref.as_bytes())?;
     editor.write_all(day.event.instruct.as_bytes())?;
     editor.flush()?;
     editor.seek(SeekFrom::Start(0))?;
-
     edit_file(editor.path())?;
-
 
     let mut res = String::new();
     editor.read_to_string(&mut res)?;
-    Ok(res)
+
+    let mut lines = res.lines();
+    let mut property = lines.by_ref().take(5);
+    _ = property.next();
+    let _date = property.next().unwrap().trim_start_matches("Date: ");
+    let weather = property.next().map(|t| t.trim_start_matches("Mood: ").to_string());
+    let mood = property.next().map(|t| t.trim_start_matches("Mood: ").to_string());
+    _ = property.next();
+
+    let ctx = lines.collect::<Vec<&str>>().join("\n");
+    day.weather = weather;
+    day.weather = mood;
+    Ok(ctx)
 }
 /// 通过默认编辑器打开文件
 pub fn edit_file(file: impl AsRef<Path>) -> std::io::Result<ExitStatus> {
