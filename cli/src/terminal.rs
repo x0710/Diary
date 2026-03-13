@@ -1,4 +1,3 @@
-use std::ffi::OsStr;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::process::ExitStatus;
@@ -6,6 +5,7 @@ use clap::Parser;
 use rustyline::{Config, DefaultEditor};
 use rustyline::error::ReadlineError;
 use diary_core::base::executor::Executor;
+use diary_core::model::Day;
 use diary_core::storage::DatabaseManager;
 use diary_core::utils::io::export::Exporter;
 use diary_core::utils::io::import::DuplicateStrategy::Replace;
@@ -91,18 +91,21 @@ impl CliSession<Executor> {
     }
 }
 /// 通过调用外部编辑器编辑文本
-/// *s* 预设文本
-/// *date* 预设日期（将在临时文件名中出现）
-pub fn edit_with_editor(s: &str, date: impl AsRef<OsStr>) -> Result<String, CliError> {
-    let mut suffix = date.as_ref().to_os_string();
+/// # 参数
+/// - `s` 预设文本
+/// - `date` 预设日期（将在临时文件名中出现）
+/// # 返回值
+/// 编辑后的文本
+pub fn edit_with_editor(day: &mut Day) -> Result<String, CliError> {
+    let mut suffix = day.date.to_string();
     // 设置临时文件为markdown格式
-    suffix.push(".md");
+    suffix.push_str(".md");
 
     let mut editor = tempfile::Builder::default()
         .suffix(&suffix)
         .prefix("Luck-for-you:>")
         .tempfile()?;
-    editor.write_all(s.as_bytes())?;
+    editor.write_all(day.event.instruct.as_bytes())?;
     editor.flush()?;
     editor.seek(SeekFrom::Start(0))?;
 
