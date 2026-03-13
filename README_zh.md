@@ -43,7 +43,7 @@ cargo build --release
 生成的可执行文件位于：
 
 ```text
-target/release/diary
+target/release/{diary-cli,diary-gui}
 ```
 
 你可以将其移动到 `$PATH` 中方便使用。
@@ -59,16 +59,18 @@ target/release/diary
 
 ## 使用方法
 
-运行 `diary` 进入交互模式：
+### 命令行交互模式
+
+运行 `diary-cli` 进入交互模式：
 
 ```bash
-diary
+diary-cli
 ```
 
 ### 添加一条记录
 
 ```bash
->: add 2025-01-01 "今天发生的事情"
+>: ad 2025-01-01 "今天发生的事情"
 ```
 
 支持的日期格式：
@@ -92,11 +94,13 @@ diary
 ```
 
 ### 导入/导出数据
+
+现已支持CSV，JSON格式。
 ```bash
-# 导出数据到filename.json中
-diary export <filename.json>
-# 从filename.json中导入数据
-diary import <filename.json>
+# 用json导出数据到filename.json中
+diary-cli export <filename.json> --json
+# 用json从filename.json中导入数据
+diary-cli import <filename.json> --json
 ```
 ---
 

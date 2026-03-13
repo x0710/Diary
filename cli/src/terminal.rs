@@ -10,21 +10,20 @@ use diary_core::storage::DatabaseManager;
 use diary_core::utils::io::export::Exporter;
 use diary_core::utils::io::import::DuplicateStrategy::Replace;
 use diary_core::utils::io::import::Importer;
-use diary_core::utils::io::format::Format::Json;
 use crate::args;
-use crate::args::{Args, Commands};
+use crate::args::{CliArgs, Commands};
 use crate::error::CliError;
 use crate::executor::CliExecutor;
 
 /// Cli实体表示
 pub struct CliSession {
     /// 用户启动程序时所采用的参数
-    pub args: Args,
+    pub args: CliArgs,
     pub(crate) executor: CliExecutor,
 }
 impl CliSession {
     pub fn new(db_mgr: DatabaseManager) -> Self {
-        let args = Args::parse();
+        let args = CliArgs::parse();
         let exec = Executor::from(db_mgr);
         let exec = CliExecutor::from(exec);
         Self {
@@ -45,9 +44,9 @@ impl CliSession {
     async fn once(&mut self) {
         match self.args.command.as_ref().unwrap() {
             Commands::Interactive => self.interactive().await,
-            Commands::Import {path} => {
+            Commands::Import(val) => {
                 let mut imp = Importer::new(self.executor.exec.conn_mut());
-                let data = Importer::read_from_file(path, Json)
+                let data = Importer::read_from_file(&val.path, (&val.format).into())
                     .expect("Error when read file");
                 if !data.1.is_empty() {
                     for i in data.1 {
@@ -57,9 +56,9 @@ impl CliSession {
                 imp.import_to_db(data.0, Replace).await
                     .expect("Error when import to database");
             }
-            Commands::Export {path} => {
+            Commands::Export(val) => {
                 let mut exp = Exporter::new(self.executor.exec.conn_mut(),
-                                        path, Json);
+                                        &val.path, (&val.format).into());
                 exp.all_export().await
                     .expect("Error when export all data");
             }

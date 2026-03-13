@@ -43,7 +43,7 @@ cargo build --release
 The binary will be located at:
 
 ```text
-target/release/diary
+target/release/{diary-cli,diary-gui}
 ```
 
 You can move it to your `$PATH` for easier use.
@@ -58,16 +58,18 @@ You can also download precompiled binaries directly from the GitHub Releases pag
 
 ## Usage
 
-Run `diary` to start the interactive mode.
+## Cli Version
+
+Run `diary-cli` to start the interactive mode.
 
 ```bash
-diary
+diary-cli
 ```
 
 ### Add an entry
 
 ```bash
->: add 20250101 "What happened today"
+>: ad 20250101 "What happened today"
 ```
 
 Supported date formats:
@@ -93,12 +95,14 @@ Supported date formats:
 
 ### Import / Export Data
 
-```bash
-# Export data to filename.json
-diary export <filename.json>
+Now, Cli Version supports CSV and JSON formats.
 
-# Import data from filename.json
-diary import <filename.json>
+```bash
+# Export data to filename.json with json
+diary-cli export <filename.json> --json
+
+# Import data from filename.json with json
+diary-cli import <filename.json> --json
 ```
 
 ---
