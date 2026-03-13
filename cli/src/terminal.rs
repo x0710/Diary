@@ -13,19 +13,18 @@ use diary_core::utils::io::import::Importer;
 use crate::args;
 use crate::args::{CliArgs, Commands};
 use crate::error::CliError;
-use crate::executor::CliExecutor;
+use crate::execute::CliExecutor;
 
 /// Cli实体表示
-pub struct CliSession {
+pub struct CliSession<T: CliExecutor> {
     /// 用户启动程序时所采用的参数
     pub args: CliArgs,
-    pub(crate) executor: CliExecutor,
+    pub(crate) executor: T,
 }
-impl CliSession {
+impl CliSession<Executor> {
     pub fn new(db_mgr: DatabaseManager) -> Self {
         let args = CliArgs::parse();
         let exec = Executor::from(db_mgr);
-        let exec = CliExecutor::from(exec);
         Self {
             args,
             executor: exec,
@@ -45,7 +44,7 @@ impl CliSession {
         match self.args.command.as_ref().unwrap() {
             Commands::Interactive => self.interactive().await,
             Commands::Import(val) => {
-                let mut imp = Importer::new(self.executor.exec.conn_mut());
+                let mut imp = Importer::new(self.executor.conn_mut());
                 let data = Importer::read_from_file(&val.path, (&val.format).into())
                     .expect("Error when read file");
                 if !data.1.is_empty() {
@@ -57,7 +56,7 @@ impl CliSession {
                     .expect("Error when import to database");
             }
             Commands::Export(val) => {
-                let mut exp = Exporter::new(self.executor.exec.conn_mut(),
+                let mut exp = Exporter::new(self.executor.conn_mut(),
                                         &val.path, (&val.format).into());
                 exp.all_export().await
                     .expect("Error when export all data");
