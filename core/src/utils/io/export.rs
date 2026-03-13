@@ -36,7 +36,7 @@ impl<'a> Exporter<'a> {
                 csv_writer.flush()?;
             }
             Format::Json => {
-                let json = serde_json::to_string(&days).unwrap();
+                let json = serde_json::to_string(&days)?;
                 File::create(&self.path)?.write_all(json.as_bytes())?;
             }
         }

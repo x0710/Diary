@@ -6,15 +6,13 @@ use std::sync::Arc;
 use eframe::{run_native, NativeOptions};
 use eframe::egui::{FontData, FontDefinitions, IconData, ViewportBuilder, Visuals};
 use eframe::epaint::FontFamily;
-use diary_core::db::executor::Executor;
 use crate::app::app::App;
 use crate::service::executor::GuiService;
 
 fn main() -> eframe::Result {// 16x16 图标
     let dbmgr = diary_core::base::env::open_with_default_database()
         .expect("Could not open database");
-    let exec = Executor::from(dbmgr);
-    let exec = GuiService::new(exec);
+    let exec = GuiService::new(dbmgr);
     const WIDTH: u32 = 16;
     const HEIGHT: u32 = 16;
 

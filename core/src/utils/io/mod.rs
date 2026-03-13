@@ -83,7 +83,7 @@ pub mod model {
                 date: date.into(),
                 event: event.into(),
                 weather: record.weather,
-                mood: mood,
+                mood,
             })
         }
     }
@@ -130,6 +130,16 @@ pub mod format {
                 "csv" => Ok(Format::Csv),
                 _ => Err(Error::InvalidData(format!("Unsupported format: '{}'! ", s))),
             }
+        }
+    }
+    impl From<csv::Error> for Error {
+        fn from(err: csv::Error) -> Self {
+            Error::InvalidData(err.to_string())
+        }
+    }
+    impl From<serde_json::Error> for Error {
+        fn from(value: serde_json::Error) -> Self {
+            Error::InvalidData(value.to_string())
         }
     }
 }

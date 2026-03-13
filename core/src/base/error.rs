@@ -5,14 +5,7 @@ use time::error::Parse;
 pub enum Error {
     Db(sqlx::Error),
     Io(std::io::Error),
-    Csv(csv::Error),
     InvalidData(String),
-    UnknownCommand(String),
-}
-impl From<csv::Error> for Error {
-    fn from(err: csv::Error) -> Self {
-        Error::Csv(err)
-    }
 }
 
 impl From<std::io::Error> for Error {
@@ -33,6 +26,10 @@ impl From<sqlx::Error> for Error {
 }
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            Error::Db(e) => write!(f, "Database error: {}", e),
+            Error::Io(e) => write!(f, "I/O error: {}", e),
+            Error::InvalidData(id) => write!(f, "Invalid data: {}", id),
+        }
     }
 }

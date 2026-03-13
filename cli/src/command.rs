@@ -1,12 +1,27 @@
+//! 可供操作命令
+
 use std::str::FromStr;
 use diary_core::base::date::Date;
-use diary_core::db::command::Command;
 use diary_core::base::env::version;
-use diary_core::db::executor::Executor;
-use diary_core::base::error::Error;
 use diary_core::model::Day;
 use crate::error::CliError;
+use crate::executor::Executor;
 
+/// 储存用户在做操作时的参数
+#[derive(Debug, Clone)]
+pub enum Command {
+    Add(Date, Option<String>),
+    Remove(Date),
+    Check(Date),
+    ListAll,
+}
+#[derive(Debug, Clone, Copy)]
+pub enum SubCommand {
+    Add,
+    Remove,
+    Check,
+    ListAll,
+}
 #[derive(Debug)]
 pub enum CliCommand {
     CoreCommand(Command),
@@ -48,78 +63,61 @@ Available commands:
 "#);
     }
 }
-impl ParseStr for CliCommand {
-    fn convert(s: &str) -> Result<Self, Error> {
-        let res = Command::convert(s);
+impl FromStr for CliCommand {
+    type Err = CliError;
+    fn from_str(s: &str) -> Result<Self, CliError> {
+        let res = s.parse();
         match res {
             Ok(cmd) => Ok(CliCommand::CoreCommand(cmd)),
-            Err(Error::UnknownCommand(cmd)) => {
+            Err(CliError::UnknownCommand(cmd)) => {
                 match cmd.as_str() {
                     "help" | "h" => Ok(CliCommand::Help),
                     "quit" | "exit" | "q" => Ok(CliCommand::Quit),
                     "version" | "v" => Ok(CliCommand::Version),
-                    _ => Err(Error::UnknownCommand(s.to_string()))
+                    _ => Err(CliError::UnknownCommand(cmd)),
                 }
             },
             Err(e) => Err(e.into()),
         }
     }
 }
-/// 表示用户正在做的操作
-#[derive(Debug, Clone, Copy)]
-pub enum SubCommand {
-    Add,
-    Remove,
-    Check,
-    ListAll,
-    // Quit,
-    // Help,
-}
 impl FromStr for SubCommand {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Error> {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, String> {
         match s {
             "ad" | "add" => Ok(SubCommand::Add),
             "rm" | "remove" | "delete" | "del" => Ok(SubCommand::Remove),
             "chk" | "check" | "read" | "show" => Ok(SubCommand::Check),
             "ls" | "list" => Ok(SubCommand::ListAll),
-            // "h" | "help" => Ok(SubCommand::Help),
-            // "quit" | "exit" | "q" => Ok(SubCommand::Quit),
-            _ => Err(Error::UnknownCommand(s.to_string())),
+            _ => Err(s.to_string()),
         }
     }
 }
-impl ParseStr for Command {
-    fn convert(s: &str) -> Result<Self, Error> {
-        // 以命令`>: ad 0 ctx`为例，
+impl FromStr for Command {
+    type Err = CliError;
+    fn from_str(s: &str) -> Result<Self, CliError> {
         let mut args = s.split_whitespace();
-        // `SubCommand::Add`
-        let sub = args.next().unwrap_or_default().parse()?;
-        // today
-        let date = args.next().unwrap_or_default();
-        // Some("ctx")
+        let sub = args.next().unwrap_or_default()
+            .parse::<SubCommand>()
+            .map_err(|s| CliError::UnknownCommand(s))?;
+
+        let date = args.next()
+            .unwrap_or_default()
+            .parse::<Date>();
         let ctx = args.next();
 
         match sub {
             SubCommand::Add => {
-                let date = date.parse::<Date>()?;
-                Ok(Command::Add(date, ctx.map(str::to_string)))
+                Ok(Command::Add(date?, ctx.map(str::to_string)))
             }
             SubCommand::Remove => {
-                let date = date.parse::<Date>()?;
-                Ok(Command::Remove(date))
+                Ok(Command::Remove(date?))
             }
             SubCommand::Check => {
-                let date = date.parse::<Date>()?;
-                Ok(Command::Check(date))
+                Ok(Command::Check(date?))
             }
             SubCommand::ListAll => Ok(Command::ListAll),
-            // SubCommand::Help => Ok(Command::Help),
-            // SubCommand::Quit => Ok(Command::Quit),
         }
     }
 }
 
-pub trait ParseStr: Sized {
-    fn convert(s: &str) -> Result<Self, Error>;
-}

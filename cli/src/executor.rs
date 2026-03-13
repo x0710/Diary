@@ -1,11 +1,11 @@
-use crate::db::command::Command;
-use crate::base::error::Error;
-use crate::model::Day;
-use crate::model::Event;
-use crate::db::DatabaseManager;
+use diary_core::base::error::Error;
+use diary_core::model::Day;
+use diary_core::model::Event;
+use diary_core::db::DatabaseManager;
+use crate::command::Command;
 
 pub struct Executor {
-    conn: DatabaseManager,
+    pub(crate) conn: DatabaseManager,
 }
 impl Executor {
     pub async fn exec(&mut self, command: &Command) -> Result<Vec<Day>, Error> {
@@ -28,12 +28,6 @@ impl Executor {
             }
             Command::ListAll => Ok(self.conn.read_all().await?)
         }
-    }
-    pub fn conn(&self) -> &DatabaseManager {
-        &self.conn
-    }
-    pub fn conn_mut(&mut self) -> &mut DatabaseManager {
-        &mut self.conn
     }
 }
 impl From<DatabaseManager> for Executor {

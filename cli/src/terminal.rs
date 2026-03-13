@@ -4,7 +4,8 @@ use std::process::ExitStatus;
 use clap::Parser;
 use rustyline::{Config, DefaultEditor};
 use rustyline::error::ReadlineError;
-use diary_core::db::executor::Executor;
+use diary_core::base::error::Error;
+use crate::executor::Executor;
 use diary_core::model::Day;
 use diary_core::db::DatabaseManager;
 use diary_core::utils::io::export::Exporter;
@@ -44,7 +45,7 @@ impl CliSession<Executor> {
         match self.args.command.as_ref().unwrap() {
             Commands::Interactive => self.interactive().await,
             Commands::Import(val) => {
-                let mut imp = Importer::new(self.executor.conn_mut());
+                let mut imp = Importer::new(&mut self.executor.conn);
                 let data = Importer::read_from_file(&val.path, (&val.format).into())
                     .expect("Error when read file");
                 if !data.1.is_empty() {
@@ -56,7 +57,7 @@ impl CliSession<Executor> {
                     .expect("Error when import to database");
             }
             Commands::Export(val) => {
-                let mut exp = Exporter::new(self.executor.conn_mut(),
+                let mut exp = Exporter::new(&mut self.executor.conn,
                                         &val.path, (&val.format).into());
                 exp.all_export().await
                     .expect("Error when export all data");
@@ -75,10 +76,7 @@ impl CliSession<Executor> {
                     match self.executor.exec_command(&line).await {
                         Ok(_) => (),
                         Err(CliError::Quit) => break,
-                        Err(CliError::InvalidArgs(s)) => println!("Invalid args: {}", s),
-                        Err(CliError::Io(s)) => println!("IO error: {}", s),
-                        Err(CliError::UnknownCommand(s)) => println!("Unknown command: {}", s),
-                        // Err(CliError::CoreError(e)) => println!("Core Error: {}", e),
+                        Err(e) => println!("{}", e),
                     }
                 },
                 Err(ReadlineError::Eof) | Err(ReadlineError::Interrupted) => {
@@ -96,7 +94,7 @@ impl CliSession<Executor> {
 /// - `date` 预设日期（将在临时文件名中出现）
 /// # 返回值
 /// 编辑后的文本
-pub fn edit_with_editor(day: &mut Day) -> Result<String, CliError> {
+pub fn edit_with_editor(day: &mut Day) -> Result<String, Error> {
     let mut suffix = day.date.to_string();
     // 设置临时文件为markdown格式
     suffix.push_str(".md");

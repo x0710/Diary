@@ -56,7 +56,7 @@ impl eframe::App for App {
                                 .parse();
                             if let Ok(format) = format {
                                 self.error = async_std::task::block_on(async {
-                                    let mut exp = Exporter::new(self.executor.executor.conn_mut(), file, format);
+                                    let mut exp = Exporter::new(&mut self.executor.executor, file, format);
                                     exp.all_export().await.err()
                                 });
                             }
@@ -66,7 +66,7 @@ impl eframe::App for App {
                     }
                     if ui.button("Import").clicked() {
                         if let Some(file) = rfd::FileDialog::new().pick_file() {
-                            let mut imp = Importer::new(self.executor.executor.conn_mut());
+                            let mut imp = Importer::new(&mut self.executor.executor);
                             match Importer::read_from_file(file, Json) {
                                 Ok(r) => {
                                     let mut ers = String::new();
