@@ -20,6 +20,9 @@ pub fn open_with_default_database() -> Result<DatabaseManager, Error> {
 pub fn open_with_db_file(
     db_path: PathBuf,
 ) -> Result<DatabaseManager, Error> {
+    if !db_path.exists() {
+        std::fs::File::create(&db_path)?;
+    }
     Ok(DatabaseManager::from_path(&db_path)?)
 }
 pub fn version() -> String {

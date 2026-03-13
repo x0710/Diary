@@ -16,7 +16,7 @@ impl DatabaseManager {
             date TEXT NOT NULL PRIMARY KEY,
             event TEXT,
             weather TEXT,
-            mood TEXT)
+            mood DOUBLE)
         ");
         let rt = tokio::runtime::Builder::new_current_thread().build()?;
         let conn = rt.block_on(async {
@@ -80,7 +80,11 @@ impl From<&SqliteRow> for Day {
         let date = time::Date::parse(&date_raw, DATE_FORMAT1).unwrap();
         let event_str: String = row.get("event");
         let weather = row.get("weather");
-        let mood = row.get("mood");
+        let mood_str: Option<String> = row.get("mood");
+        let mood = mood_str
+            .map(|mood| mood.parse::<f64>())
+            .transpose()
+            .unwrap_or_default();
         // Obj
         Day {
             date: date.into(),
