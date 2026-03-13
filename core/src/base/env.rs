@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use crate::base::error::Error;
-use crate::storage::DatabaseManager;
+use crate::db::DatabaseManager;
 
 pub const DEFAULT_DB_NAME: &str = "diary.db";
 pub fn default_project_path() -> PathBuf {

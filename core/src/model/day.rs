@@ -21,7 +21,7 @@ impl Display for Day {
 }
 impl Default for Day {
     fn default() -> Self {
-        let now = crate::base::date::Date::native_time();
+        let now = Date::native_time();
         Self {
             date: now,
             event: Event::default(),

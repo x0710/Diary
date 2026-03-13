@@ -1,5 +1,5 @@
 use diary_core::base::date::Date;
-use diary_core::base::executor::Executor;
+use diary_core::db::executor::Executor;
 use diary_core::base::error::Error;
 use crate::model::day::GuiDayState;
 

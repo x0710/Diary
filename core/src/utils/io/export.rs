@@ -3,7 +3,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use crate::base::error::Error;
 use crate::model::Day;
-use crate::storage::DatabaseManager;
+use crate::db::DatabaseManager;
 use crate::utils::io::format::Format;
 use crate::utils::io::model::Record;
 

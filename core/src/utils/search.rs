@@ -4,7 +4,7 @@ use sqlx::sqlite::SqliteRow;
 use crate::base::date::Date;
 use crate::base::error::Error;
 use crate::model::Day;
-use crate::storage::DatabaseManager;
+use crate::db::DatabaseManager;
 pub struct SearchCondition {
     keyword: Option<String>,
     regex: Option<Regex>,

@@ -5,7 +5,7 @@ use sqlx::{Connection,};
 use crate::base::date::DATE_FORMAT1;
 use crate::base::error::Error;
 use crate::model::Day;
-use crate::storage::DatabaseManager;
+use crate::db::DatabaseManager;
 use crate::utils::io::format::Format;
 use crate::utils::io::model::Record;
 

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use eframe::{run_native, NativeOptions};
 use eframe::egui::{FontData, FontDefinitions, IconData, ViewportBuilder, Visuals};
 use eframe::epaint::FontFamily;
-use diary_core::base::executor::Executor;
+use diary_core::db::executor::Executor;
 use crate::app::app::App;
 use crate::service::executor::GuiService;
 
