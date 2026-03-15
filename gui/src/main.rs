@@ -43,7 +43,7 @@ fn main() -> eframe::Result {// 16x16 图标
         let mut fd = FontDefinitions::default();
         fd.font_data.insert(
             "CN-F".to_string(),
-            Arc::new(FontData::from_static(include_bytes!("../assets/LXGWWenKaiMonoLite-Regular.ttf"))),
+            Arc::new(FontData::from_static(include_bytes!("../assets/SmileySans-Oblique.ttf"))),
         );
         egui_extras::install_image_loaders(&x.egui_ctx);
         fd.families.get_mut(&FontFamily::Monospace).unwrap()
