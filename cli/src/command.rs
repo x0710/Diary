@@ -11,7 +11,7 @@ use SubCommand::*;
 /// 储存用户在做操作时的参数
 #[derive(Debug, Clone)]
 pub enum Command {
-    Add(Date, Option<String>),
+    Add(Day),
     Remove(Date),
     Check(Date),
     ListAll,
@@ -100,10 +100,13 @@ impl FromStr for Command {
         let date = args.next()
             .unwrap_or_default()
             .parse::<Date>();
-        let ctx = args.next();
+        let _ctx = args.next();
 
         match sub {
-            Add => Ok(Command::Add(date?, ctx.map(str::to_string))),
+            Add => Ok(Command::Add(Day {
+                date: date?,
+                ..Day::default()
+            })),
             Remove => Ok(Command::Remove(date?)),
             Check => Ok(Command::Check(date?)),
             ListAll => Ok(Command::ListAll),

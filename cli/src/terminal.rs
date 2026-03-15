@@ -24,7 +24,7 @@ pub struct CliSession {
 impl CliSession {
     pub fn new(db_mgr: DatabaseManager) -> Self {
         let args = CliArgs::parse();
-        let exec = Executor::from(db_mgr);
+        let exec = Executor::new(db_mgr);
         Self {
             args,
             executor: exec,
@@ -93,7 +93,7 @@ impl CliSession {
 /// - `date` 预设日期（将在临时文件名中出现）
 /// # 返回值
 /// 编辑后的文本
-pub fn edit_with_editor(day: &mut Day) -> Result<String, Error> {
+pub fn edit_with_editor(day: &mut Day) -> Result<(), Error> {
     let mut suffix = day.date.to_string();
     // 设置临时文件为markdown格式
     suffix.push_str(".md");
@@ -103,12 +103,11 @@ pub fn edit_with_editor(day: &mut Day) -> Result<String, Error> {
         .prefix("Luck-for-you:>")
         .tempfile()?;
 
-    let pref = format!(r#"====================
-Date: {}
-Weather: {}
-Mood: {}
-====================
-"#, day.date.to_string(), day.weather.as_deref().unwrap_or_default(), day.mood.unwrap_or_default());
+    let pref = format!(r#"{}, {}
+    Mood: {}
+    Weather: {}
+------------------------------
+"#, day.date.to_string(), day.date.weekday().to_string(), day.mood.unwrap_or_default(), day.weather.as_deref().unwrap_or_default());
 
     editor.write_all(pref.as_bytes())?;
     editor.write_all(day.event.instruct.as_bytes())?;
@@ -120,17 +119,16 @@ Mood: {}
     editor.read_to_string(&mut res)?;
 
     let mut lines = res.lines();
-    let mut property = lines.by_ref().take(5);
-    _ = property.next();
-    let _date = property.next().unwrap().trim_start_matches("Date: ");
-    let weather = property.next().map(|t| t.trim_start_matches("Mood: ").to_string());
-    let mood = property.next().map(|t| t.trim_start_matches("Mood: ").to_string());
+    let mut property = lines.by_ref().take(3);
+    let mood = property.next().map(|t| t.trim_start_matches("Mood:").trim().to_string());
+    let weather = property.next().map(|t| t.trim_start_matches("Weather:").trim().to_string());
     _ = property.next();
 
     let ctx = lines.collect::<Vec<&str>>().join("\n");
     day.weather = weather;
-    day.weather = mood;
-    Ok(ctx)
+    day.mood = mood.map(|t1| t1.parse().unwrap_or_default());
+    day.event.instruct = ctx;
+    Ok(())
 }
 /// 通过默认编辑器打开文件
 pub fn edit_file(file: impl AsRef<Path>) -> std::io::Result<ExitStatus> {
