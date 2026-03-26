@@ -119,10 +119,11 @@ pub fn edit_with_editor(day: &mut Day) -> Result<(), Error> {
     editor.read_to_string(&mut res)?;
 
     let mut lines = res.lines();
-    let mut property = lines.by_ref().take(3);
-    let mood = property.next().map(|t| t.trim_start_matches("Mood:").trim().to_string());
-    let weather = property.next().map(|t| t.trim_start_matches("Weather:").trim().to_string());
-    _ = property.next();
+    let mut property = lines.by_ref().take(4);
+    _ = property.next(); // Date, Day
+    let mood = property.next().map(|t| t.trim().trim_start_matches("Mood:").trim().to_string());
+    let weather = property.next().map(|t| t.trim().trim_start_matches("Weather:").trim().to_string());
+    _ = property.next(); // Delimiter
 
     let ctx = lines.collect::<Vec<&str>>().join("\n");
     day.weather = weather;
