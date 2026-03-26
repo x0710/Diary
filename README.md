@@ -74,6 +74,7 @@ diary-cli
 
 Supported date formats:
 
+* 3 days before today: `3`
 * 16th of this month: `m16`
 * March 27 of this year: `ye0327`
 * today: `today` / `t`

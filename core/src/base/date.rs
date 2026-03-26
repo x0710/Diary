@@ -49,8 +49,9 @@ impl FromStr for Date {
                 .ok_or_else(|| Error::InvalidData("It's too large".to_string())),
             "today" | "t" => Ok(today),
             _ => {
+                // 如果格式为整数n，那么以今天为起始，前移n天
                 if let Ok(dx) = source.parse() {
-                    return Ok(today.saturating_add(Duration::days(dx)).into())
+                    return Ok(today.saturating_sub(Duration::days(dx)).into())
                 }
                 // Regard value input as day when prefix is "m"
                 if let Some(dxs) = source.strip_prefix("m") {

@@ -75,6 +75,7 @@ diary-cli
 
 支持的日期格式：
 
+* `3` (三天前)
 * `YYYYMMDD`
 * `YYYY-MM-DD`
 * `today` / `t`（今天）
