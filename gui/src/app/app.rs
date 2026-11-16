@@ -69,13 +69,11 @@ impl eframe::App for App {
                             let mut imp = Importer::new(self.executor.executor.conn_mut());
                             match Importer::read_from_file(file, Json) {
                                 Ok(r) => {
-                                    let mut ers = String::new();
-                                    r.1.iter().for_each(|x| ers.push_str(x));
-                                    if !ers.is_empty() {
-                                        self.error = Some(Error::InvalidData(ers.into()));
-                                    }
+                                    let errors = r.1.join("\n");
                                     self.error = async_std::task::block_on(async {
                                         imp.import_to_db(r.0, DuplicateStrategy::Replace).await.err()
+                                    }).or_else(|| {
+                                        if errors.is_empty() { None } else { Some(Error::InvalidData(errors)) }
                                     });
 
                                 }
@@ -201,13 +199,13 @@ impl App {
                         ui.heading("Diary");
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                             let cur_rec = ui.available_rect_before_wrap();
-                            let github_icon = Image::new(include_image!("../../assets/github-mark.svg"));
+                            let github_icon = Image::new(include_image!("../../assets/github-mark-white.svg"));
                             let icon_rec = Rect::from_min_size(
                                 [cur_rec.right()-55., cur_rec.top()+10.].into(),
                                 [50., 50.].into(),
                             );
 
-                            if ui.put(icon_rec, ImageButton::new(github_icon).frame(false)).clicked() {
+                            if ui.put(icon_rec, Button::image(github_icon).frame(false)).clicked() {
                                 println!("Clicked!");
                                 ctx.open_url(OpenUrl::new_tab("https://github.com/x0710/Diary"))
                             }

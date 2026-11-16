@@ -1,15 +1,17 @@
 //! 项目封装的日期类
 
+use crate::base::error::Error;
 use std::ops::Deref;
 use std::str::FromStr;
 use time::format_description::BorrowedFormatItem;
 use time::{Duration, Month};
-use crate::base::error::Error;
 
 /// 首选日期数据交换格式
-pub const DATE_FORMAT1: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year][month][day]");
+pub const DATE_FORMAT1: &[BorrowedFormatItem<'static>] =
+    time::macros::format_description!("[year][month][day]");
 /// 备选日期数据交换格式
-pub const DATE_FORMAT2: &[BorrowedFormatItem<'static>] = time::macros::format_description!("[year]-[month]-[day]");
+pub const DATE_FORMAT2: &[BorrowedFormatItem<'static>] =
+    time::macros::format_description!("[year]-[month]-[day]");
 
 /// 项目中与时间相关的操作均用此结构体表示
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -25,11 +27,8 @@ impl Date {
 
     /// 以本地日期构造`Date`
     pub fn native_time() -> Self {
-        let cur = time::OffsetDateTime::now_local()
-            .unwrap_or(time::OffsetDateTime::now_utc());
-        Self {
-            date: cur.date(),
-        }
+        let cur = time::OffsetDateTime::now_local().unwrap_or(time::OffsetDateTime::now_utc());
+        Self { date: cur.date() }
     }
 }
 impl FromStr for Date {
@@ -38,19 +37,35 @@ impl FromStr for Date {
     fn from_str(source: &str) -> Result<Self, Self::Err> {
         let source = source.trim();
         let today = Self::native_time().date;
-        if source.is_empty() || !source.is_ascii() {
+        if source.is_empty() {
             return Ok(today.into());
+        }
+        if !source.is_ascii() {
+            return Err(Error::InvalidData(source.to_string()));
+        }
+        // Compact calendar dates must be parsed before numeric day offsets.
+        if source.len() == 8 && source.bytes().all(|b| b.is_ascii_digit()) {
+            return Ok(time::Date::parse(source, DATE_FORMAT1)?.into());
         }
 
         let d = match source {
-            "yesterday" | "y" | "yes" => today.previous_day()
+            "yesterday" | "y" | "yes" => today
+                .previous_day()
                 .ok_or_else(|| Error::InvalidData("It's too small".to_string())),
-            "tomorrow" | "tom" => today.next_day()
+            "tomorrow" | "tom" | "m" => today
+                .next_day()
                 .ok_or_else(|| Error::InvalidData("It's too large".to_string())),
             "today" | "t" => Ok(today),
             _ => {
-                if let Ok(dx) = source.parse() {
-                    return Ok(today.saturating_add(Duration::days(dx)).into())
+                if let Ok(dx) = source.parse::<i64>() {
+                    let duration = dx
+                        .checked_mul(86_400)
+                        .map(Duration::seconds)
+                        .ok_or_else(|| Error::InvalidData(source.to_string()))?;
+                    return today
+                        .checked_add(duration)
+                        .map(Into::into)
+                        .ok_or_else(|| Error::InvalidData(source.to_string()));
                 }
                 // Regard value input as day when prefix is "m"
                 if let Some(dxs) = source.strip_prefix("m") {
@@ -62,11 +77,15 @@ impl FromStr for Date {
                 }
                 // Regard value input as day when prefix is "ye"
                 if let Some(dxs) = source.strip_prefix("ye") {
-                    if dxs.len() == 4 {
-                        let month = Month::try_from((dxs.as_bytes()[0]-b'0')*10+dxs.as_bytes()[1]-b'0');
-                        let day = (dxs.as_bytes()[2]-b'0')*10+dxs.as_bytes()[3]-b'0';
+                    if dxs.len() == 4 && dxs.bytes().all(|b| b.is_ascii_digit()) {
+                        let month = Month::try_from(
+                            (dxs.as_bytes()[0] - b'0') * 10 + dxs.as_bytes()[1] - b'0',
+                        );
+                        let day = (dxs.as_bytes()[2] - b'0') * 10 + dxs.as_bytes()[3] - b'0';
 
-                        if let Ok(m) = month && let Ok(d) = time::Date::from_calendar_date(today.year(), m, day) {
+                        if let Ok(m) = month
+                            && let Ok(d) = time::Date::from_calendar_date(today.year(), m, day)
+                        {
                             return Ok(Self { date: d });
                         }
                     }

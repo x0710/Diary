@@ -1,22 +1,24 @@
-use std::fs::File;
-use std::ops::DerefMut;
-use std::path::Path;
-use sqlx::{Connection,};
 use crate::base::date::DATE_FORMAT1;
 use crate::base::error::Error;
 use crate::model::Day;
 use crate::storage::DatabaseManager;
 use crate::utils::io::format::Format;
 use crate::utils::io::model::Record;
+use sqlx::Connection;
+use std::fs::File;
+use std::path::Path;
 
 pub struct Importer<'a> {
     db_mgr: &'a mut DatabaseManager,
 }
 impl<'a> Importer<'a> {
     pub fn new(db_mgr: &'a mut DatabaseManager) -> Self {
-        Importer { db_mgr, }
+        Importer { db_mgr }
     }
-    pub fn read_from_file<P: AsRef<Path>>(path: P, format: Format) -> Result<(Vec<Day>, Vec<String>), Error> {
+    pub fn read_from_file<P: AsRef<Path>>(
+        path: P,
+        format: Format,
+    ) -> Result<(Vec<Day>, Vec<String>), Error> {
         let mut days = Vec::new();
         let mut errors = Vec::new();
         match format {
@@ -26,56 +28,54 @@ impl<'a> Importer<'a> {
                     for i in r {
                         days.push(i.try_into()?);
                     }
-                }else {
+                } else {
                     errors.push(res.unwrap_err().to_string());
                 }
-
             }
             Format::Csv => {
                 let mut csv_reader = csv::Reader::from_path(path)?;
                 for r in csv_reader.deserialize::<Record>() {
                     if let Ok(record) = r {
                         days.push(record.try_into()?);
-                    }else {
+                    } else {
                         errors.push(r.unwrap_err().to_string());
                     }
                 }
-
             }
         }
         Ok((days, errors))
     }
-    pub async fn import_to_db(&mut self, data: Vec<Day>, mode: DuplicateStrategy) -> Result<(), Error> {
-        match mode {
+    pub async fn import_to_db(
+        &mut self,
+        data: Vec<Day>,
+        mode: DuplicateStrategy,
+    ) -> Result<(), Error> {
+        let statement = match mode {
             DuplicateStrategy::Replace => {
-                for r in &data { self.db_mgr.add_day(r).await?; }
+                "INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(date) DO UPDATE SET event = excluded.event, weather = excluded.weather, mood = excluded.mood"
             }
             DuplicateStrategy::Ignore => {
-                for r in data {
-                    let query = sqlx::query("INSERT OR IGNORE INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)");
-                    query.bind(r.date.format(DATE_FORMAT1).unwrap())
-                        .bind(r.event.instruct)
-                        .bind(r.weather)
-                        .bind(r.mood)
-                        .execute(self.db_mgr.deref_mut()).await?;
-
-                }
-
+                "INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(date) DO NOTHING"
             }
             DuplicateStrategy::Fail => {
-                let mut bg = self.db_mgr.begin().await?;
-                for r in data {
-                    let query = sqlx::query("INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)")
-                        .bind(r.date.format(DATE_FORMAT1).unwrap())
-                        .bind(r.event.instruct)
-                        .bind(r.weather)
-                        .bind(r.mood);
-                    let _ = query.execute(&mut *bg).await?;
-                }
-                bg.commit().await?;
+                "INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4)"
             }
-            DuplicateStrategy::Append => {todo!()}
+            // Append nonempty text and retain existing metadata when the import omits it.
+            DuplicateStrategy::Append => {
+                "INSERT INTO day (date, event, weather, mood) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(date) DO UPDATE SET event = CASE WHEN COALESCE(day.event, '') = '' THEN excluded.event WHEN excluded.event = '' THEN day.event ELSE day.event || char(10) || excluded.event END, weather = COALESCE(excluded.weather, day.weather), mood = COALESCE(excluded.mood, day.mood)"
+            }
+        };
+        let mut transaction = self.db_mgr.begin().await?;
+        for day in data {
+            sqlx::query(statement)
+                .bind(day.date.format(DATE_FORMAT1).unwrap())
+                .bind(day.event.instruct)
+                .bind(day.weather)
+                .bind(day.mood)
+                .execute(&mut *transaction)
+                .await?;
         }
+        transaction.commit().await?;
 
         Ok(())
     }

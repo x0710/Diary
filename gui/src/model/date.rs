@@ -13,11 +13,11 @@ impl From<NaiveDate> for Date {
 }
 impl From<Date> for NaiveDate {
     fn from(date: Date) -> Self {
-        NaiveDate::from_ymd(
+        NaiveDate::from_ymd_opt(
             date.date.year(),
             date.date.month() as u32,
             date.date.day() as u32,
-        )
+        ).expect("core Date is a valid calendar date")
     }
 }
 impl From<Date> for diary_core::base::date::Date {

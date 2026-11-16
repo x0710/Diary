@@ -1,10 +1,9 @@
-use regex::Regex;
-use sqlx::{FromRow, QueryBuilder, Sqlite};
-use sqlx::sqlite::SqliteRow;
-use crate::base::date::Date;
+use crate::base::date::{DATE_FORMAT1, Date};
 use crate::base::error::Error;
 use crate::model::Day;
 use crate::storage::DatabaseManager;
+use regex::Regex;
+use sqlx::{QueryBuilder, Sqlite};
 pub struct SearchCondition {
     keyword: Option<String>,
     regex: Option<Regex>,
@@ -59,27 +58,27 @@ impl Default for SearchCondition {
     }
 }
 impl DatabaseManager {
-    pub async fn search_in_condition(&mut self, condition: SearchCondition) -> Result<Vec<Day>, Error> {
-        let mut query: QueryBuilder<'_, Sqlite> = QueryBuilder::new("SELECT date, event, weather, mood FROM day WHERE 1=1");
+    pub async fn search_in_condition(
+        &mut self,
+        condition: SearchCondition,
+    ) -> Result<Vec<Day>, Error> {
+        let mut query: QueryBuilder<'_, Sqlite> =
+            QueryBuilder::new("SELECT date, event, weather, mood FROM day WHERE 1=1");
         if let Some(keyword) = condition.keyword {
             query.push(" AND event like ");
-            query.push_bind(format!("%{}%", keyword).to_string());
-        }
-        if let Some(regex) = condition.regex {
-            query.push(" AND event regex ");
-            query.push_bind(regex.to_string());
+            query.push_bind(format!("%{}%", keyword));
         }
         if let Some(date_from) = condition.date_from {
             query.push(" AND date >= ");
-            query.push_bind(date_from.to_string());
+            query.push_bind(date_from.format(DATE_FORMAT1).unwrap());
         }
         if let Some(date_to) = condition.date_to {
             query.push(" AND date <= ");
-            query.push_bind(date_to.to_string());
+            query.push_bind(date_to.format(DATE_FORMAT1).unwrap());
         }
         if let Some(weather_like) = condition.weather_like {
             query.push(" AND weather like ");
-            query.push_bind(format!("%{}%", weather_like).to_string());
+            query.push_bind(format!("%{}%", weather_like));
         }
         if let Some(mood_from) = condition.mood_from {
             query.push(" AND mood >= ");
@@ -89,16 +88,14 @@ impl DatabaseManager {
             query.push(" AND mood <= ");
             query.push_bind(mood_to);
         }
-        query.push(" ORDER BY ");
-        query.push_bind("date DESC ");
-        let query = query.build_query_as();
-        let res = query.fetch_all(&mut self.conn).await?;
+        query.push(" ORDER BY date DESC");
+        let query = query.build_query_as::<Day>();
+        let mut res = query.fetch_all(&mut self.conn).await?;
+        // SQLite has no built-in regex operator; filter after indexed SQL predicates.
+        if let Some(regex) = condition.regex {
+            res.retain(|day| regex.is_match(&day.event.instruct));
+        }
         Ok(res)
-    }
-}
-impl FromRow<'_, SqliteRow> for Day {
-    fn from_row(row: &'_ SqliteRow) -> Result<Self, sqlx::Error> {
-        Ok(row.into())
     }
 }
 impl From<regex::Error> for Error {
